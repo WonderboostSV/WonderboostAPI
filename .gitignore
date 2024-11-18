@@ -1,0 +1,30 @@
+# Maven target directory
+/target/
+
+# IDE specific files
+/.idea/
+/.vscode/
+/*.iml
+/workspace.xml
+
+# Editor-based HTTP Client requests
+/httpRequests/
+
+/shelf/
+
+/dataSources/
+/dataSources.local.xml
+
+# Environment files
+.env
+
+# Logs and build artifacts
+*.log
+*.class
+*.jar
+*.war
+*.ear
+
+# Node.js dependencies (not used in Maven projects)
+node_modules/
+/src/main/resources/application.properties

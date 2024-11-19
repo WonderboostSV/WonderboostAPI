@@ -45,12 +45,37 @@ class Email {
             }
 
             await this.transporter.sendMail(mailOptions);
-            console.log('Correo enviado correctamente');
+            console.log(`Correo enviado correctamente a ${to}`);
             return 1; // Éxito
         } catch (error) {
-            console.error('Error al enviar el correo:', error);
+            console.error(`Error al enviar el correo a ${to}:`, error);
             return 0; // Error
         }
+    }
+
+    // Método para enviar múltiples correos
+    async sendMultipleMails(emailList) {
+        let successCount = 0; // Contador de envíos exitosos
+        let errorCount = 0; // Contador de errores
+
+        for (const email of emailList) {
+            const { to, subject, templatePath, variables, attachmentPath } = email;
+
+            try {
+                const result = await this.sendMail(to, subject, templatePath, variables, attachmentPath);
+                if (result === 1) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+            } catch (error) {
+                console.error(`Error al procesar el envío a ${to}:`, error);
+                errorCount++;
+            }
+        }
+
+        console.log(`Proceso finalizado: ${successCount} correos enviados, ${errorCount} errores.`);
+        return { successCount, errorCount }; // Retornar resultados
     }
 }
 

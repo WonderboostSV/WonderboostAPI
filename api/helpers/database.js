@@ -23,12 +23,13 @@ class Database {
     }
 
     // Método para ejecutar sentencias SQL
-    static async executeRow(query, replacements) {
+    static async executeRow(query, replacements, transaction = null) {
         try {
             await this.connect();
             const result = await this.sequelize.query(query, {
                 type: QueryTypes.INSERT,
                 replacements,
+                transaction, // Incluir transacción si está presente
             });
             return result && result[1] > 0; // `result[1]` representa `affectedRows`
         } catch (err) {
@@ -38,11 +39,12 @@ class Database {
     }
 
     // Método para obtener el ID de la última fila insertada
-    static async getLastRow(query, replacements) {
+    static async getLastRow(query, replacements, transaction = null) {
         try {
             await this.executeRow(query, replacements);
             const result = await this.sequelize.query('SELECT LAST_INSERT_ID() AS insertId;', {
                 type: QueryTypes.SELECT,
+                transaction, // Incluir transacción si está presente
             });
             return result[0] ? result[0].insertId : 0;
         } catch (err) {
@@ -51,7 +53,7 @@ class Database {
         }
     }
 
-    // Metodo para seleccionar el ultimo id insertado
+    // Método para seleccionar el último ID insertado
     static async getLastRowId() {
         try {
             const result = await this.sequelize.query('SELECT LAST_INSERT_ID() AS insertId;', {
@@ -65,12 +67,13 @@ class Database {
     }
 
     // Método para obtener un solo registro (SELECT)
-    static async getRow(query, replacements = []) {
+    static async getRow(query, replacements = [], transaction = null) {
         try {
             await this.connect();
             const result = await this.sequelize.query(query, {
                 type: QueryTypes.SELECT,
                 replacements,
+                transaction, // Incluir transacción si está presente
             });
             return result.length ? result[0] : null;
         } catch (err) {
@@ -80,15 +83,36 @@ class Database {
     }
 
     // Método para obtener múltiples registros (SELECT)
-    static async getRows(query, replacements = []) {
+    static async getRows(query, replacements = [], transaction = null) {
         try {
             await this.connect();
             const result = await this.sequelize.query(query, {
                 type: QueryTypes.SELECT,
                 replacements,
+                transaction, // Incluir transacción si está presente
             });
             return result;
         } catch (err) {
+            this.setException(err.name, err.message);
+            return false;
+        }
+    }
+
+    // Método para manejar transacciones
+    /**
+     * Ejecuta un conjunto de operaciones dentro de una transacción.
+     * 
+     * @param {Function} callback - Función que contiene las operaciones a ejecutar dentro de la transacción.
+     * @returns {*} El resultado del callback si la transacción se completa con éxito, o `false` si ocurre un error.
+     */
+    static async executeTransaction(callback) {
+        const t = await this.sequelize.transaction(); // Inicia una nueva transacción
+        try {
+            const result = await callback(t); // Ejecuta las operaciones pasando la transacción activa
+            await t.commit(); // Confirma la transacción si todo salió bien
+            return result; // Retorna el resultado del callback
+        } catch (err) {
+            await t.rollback(); // Reversión de la transacción en caso de error
             this.setException(err.name, err.message);
             return false;
         }
@@ -137,7 +161,6 @@ class Database {
             }
         }
     }
-    
 
     // Método para obtener el mensaje de error actual
     static getException() {

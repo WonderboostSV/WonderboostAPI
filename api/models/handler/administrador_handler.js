@@ -1,8 +1,11 @@
 const db = require('../../helpers/database'); // Importamos el archivo de la base de datos
+const { generateJWT } = require('../../helpers/jwt');
+const { setupSession } = require('../../helpers/session');
+const bcrypt = require('bcryptjs');
 
 class AdministradoresHandler {
     // Constructor con cada una de las variables que se instanciarian
-    constructor(id = null, nombre = null, correo = null, clave = null, telefono = null, dui = null, nacimiento = null, estado = null, direccion = null) {
+    constructor(id = null, nombre = null, correo = null, clave = null, telefono = null, dui = null, nacimiento = null, estado = null, direccion = null, alias = null, condicion = null, dias = null) {
         this.id = id;
         this.nombre = nombre;
         this.correo = correo;
@@ -12,8 +15,95 @@ class AdministradoresHandler {
         this.nacimiento = nacimiento;
         this.estado = estado;
         this.direccion = direccion;
+        this.alias = alias;
+        this.condicion = condicion;
+        this.dias = dias;
     }
 
+    // Metodos para el caso de que no haya una sesión de administrador activa
+    // Método para el login
+    async checkUser(username, password, req) {
+        try {
+            const procedureName = 'autenticar_administrador';
+            const params = [
+                username
+            ];
+            // Llamar al procedimiento almacenado
+            const result = await db.executeProcedure(procedureName, params);
+
+            if (!result || result.length === 0) return false;
+
+            const data = result[0]; // Se espera un solo registro
+            const now = new Date();
+            const tiempoBloqueo = data.TIEMPO ? new Date(data.TIEMPO) : null;
+
+            // Verificar si hay un temporizador activo
+            if (tiempoBloqueo && tiempoBloqueo > now) {
+                this.condicion = 'temporizador';
+                return false;
+            }
+
+            // Reiniciar bloqueos si ya pasó el tiempo
+            if (tiempoBloqueo && tiempoBloqueo <= now) {
+                this.alias = data.ALIAS;
+    
+                const transactionResult = await db.executeTransaction(async (transaction) => {
+                    await db.executeProcedure('reiniciar_tiempo_bloqueo', [null, this.alias], transaction);
+                    await db.executeProcedure('cambiar_estado_bloqueado', [this.alias], transaction);
+                    await db.executeProcedure('reiniciar_intentos', [this.alias], transaction);
+                    return true; // Confirmar si todo se ejecutó correctamente
+                });
+    
+                if (!transactionResult) {
+                    this.condicion = 'error_transaccion';
+                    return false;
+                }
+            }
+
+            // Verificar si el usuario está bloqueado
+            if (data.ESTADO === 'Bloqueado') {
+                this.condicion = 'bloqueado';
+                return false;
+            }
+
+            // Verificar si la contraseña expiró
+            if (data.DIAS >= 90) {
+                this.correo = data.CORREO;
+                this.condicion = 'clave';
+                return false;
+            }
+
+            // Verificar los intentos y la contraseña
+            if (data.INTENTOS >= 3) {
+                this.condicion = 'tiempo';
+                return false;
+            }
+
+            // Validar la contraseña y verificar si esta correcta
+            const isPasswordValid = bcrypt.compareSync(password, data.CLAVE);
+
+            if (!isPasswordValid) return false;
+
+            // Guardar datos en la sesión
+            req.session.user = {
+                id: data.ID,
+                alias: data.ALIAS,
+                correo: data.CORREO,
+                nombreCompleto: data.NOMBRECOMPLETO,
+                foto: data.FOTO,
+            };
+
+            // Generar un JWT para autenticación adicional
+            const token = generateJWT(data.ID);
+
+            return { status: 'success', token };
+        } catch (error) {
+            console.error('Error en checkUser:', error);
+            return false;
+        }
+    }
+
+    // Metodos para cuando haya una sesión de administrador activa
     // Método para buscar un administrador o varios
     async searchRows(searchValue) {
         const value = '%' + searchValue + '%';

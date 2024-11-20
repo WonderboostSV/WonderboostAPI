@@ -1,9 +1,10 @@
 const Validator = require('../../helpers/validator'); // Importamos el archivo de validaciones
 const AdministradorHandler = require('../../models/handler/administrador_handler'); // Importamos el handler
+const bcrypt = require('bcryptjs');
 
 class AdministradorData extends AdministradorHandler {
-    constructor(id = null, nombre = null, correo = null, clave = null, telefono = null, dui = null, nacimiento = null, estado = null, direccion = null) {
-        super(id, nombre, correo, clave, telefono, dui, nacimiento, estado, direccion); // Llamamos al constructor de la clase padre
+    constructor(id = null, nombre = null, correo = null, clave = null, telefono = null, dui = null, nacimiento = null, estado = null, direccion = null, alias = null, condicion = null, dias = null) {
+        super(id, nombre, correo, clave, telefono, dui, nacimiento, estado, direccion, alias, condicion, dias); // Llamamos al constructor de la clase padre
         this.data_error = null;
         this.filename = null;
     }
@@ -49,9 +50,18 @@ class AdministradorData extends AdministradorHandler {
 
     // Validación y asignación de la clave del administrador
     setClave(value, name, birthday, phone, email) {
+        // Validamos la contraseña usando el validador
         if (Validator.validatePassword(value, name, birthday, phone, email)) {
-            this.clave = value; // Aquí deberías aplicar el hash si lo necesitas
-            return true;
+            // Encriptamos la clave usando bcrypt
+            bcrypt.hash(value, 10, (err, hashedPassword) => {
+                if (err) {
+                    this.data_error = 'Error al encriptar la clave';
+                    return false;
+                }
+                // Asignamos la clave encriptada
+                this.clave = hashedPassword;
+                return true;
+            });
         } else {
             this.data_error = Validator.getPasswordError();
             return false;
@@ -93,7 +103,7 @@ class AdministradorData extends AdministradorHandler {
 
     // Validación y asignación de la dirección del administrador
     setDireccion(value, min = 2, max = 200) {
-        if (!Validator.validateTextOrtograpic(value)) {
+        if (!Validator.validateTextOrtographic(value)) {
             this.data_error = 'La dirección contiene caracteres prohibidos';
             return false;
         } else if (Validator.validateLength(value, min, max)) {
@@ -114,6 +124,11 @@ class AdministradorData extends AdministradorHandler {
             this.data_error = 'El estado debe ser 1 o 0';
             return false;
         }
+    }
+
+    // Método para obtener la condición
+    getCondicion() {
+        return this.condicion;
     }
 
     // Método para obtener el error de los datos

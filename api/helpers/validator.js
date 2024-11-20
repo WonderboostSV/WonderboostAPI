@@ -36,22 +36,22 @@ class Validator {
     }
 
     // Método para sanear todos los campos de un formulario.
-    validateForm(fields) {
+    static validateForm(fields) {
         return fields.map(field => field.trim());
     }
 
     // Método para validar un número natural (entero mayor o igual a 1).
-    validateNaturalNumber(value) {
+    static validateNaturalNumber(value) {
         return Number.isInteger(value) && value >= 1;
     }
 
     // Método para validar un número que sea mayor o igual a 0 .
-    validatePositiveNumber(value) {
+    static validatePositiveNumber(value) {
         return Number.isInteger(value) && value >= 0;
     }
 
     // Método para validar un archivo de imagen.
-    validateImageFile(file, dimension) {
+    static validateImageFile(file, dimension) {
         const validTypes = ['image/jpeg', 'image/png'];
         if (file && file.mimetype && validTypes.includes(file.mimetype)) {
             if (file.size > 2097152) {
@@ -69,7 +69,7 @@ class Validator {
     }
 
     // Método para validar un archivo pdf o docx.
-    validateFile(file, maxSizeMB) {
+    static validateFile(file, maxSizeMB) {
         if (file && file.path) {
             const fs = require('fs');
             const mime = require('mime-types');
@@ -105,7 +105,7 @@ class Validator {
      *   Parámetros: $value (dato a validar).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateBoolean(value) {
+    static validateBoolean(value) {
         return value === true || value === false;
     }
 
@@ -114,12 +114,12 @@ class Validator {
      *   Parámetros: $value (dato a validar).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateString(value) {
+    static validateString(value) {
         return /^[a-zA-Z0-9ñÑáÁéÉíÍóÓúÚ\s,;.]+$/.test(value);
     }
 
     // Validar el número de elementos que tiene un arreglo
-    validateNumberArray(value) {
+    static validateNumberArray(value) {
         return Array.isArray(value) && value.length === 6 && value.every(item => !isNaN(item));
     }
 
@@ -128,7 +128,7 @@ class Validator {
     *   Parámetros: $value (dato a validar).
     *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
     */
-    validateStringText(value) {
+    static validateStringText(value) {
         return /^[a-zA-Z0-9ñÑáÁéÉíÍóÓúÚ\s,;.\-+]+$/.test(value);
     }
 
@@ -137,7 +137,7 @@ class Validator {
     *   Parámetros: $value (dato a validar).
     *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
     */
-    validateTextOrtographic(value) {
+    static validateTextOrtographic(value) {
         return /^[a-zA-Z0-9ñÑáÁéÉíÍóÓúÚ\s,;.\-+\/¿?\)!]*$/.test(value);
     }
 
@@ -146,7 +146,7 @@ class Validator {
      *   Parámetros: $value (dato a validar).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateAlphabetic(value) {
+    static validateAlphabetic(value) {
         return /^[a-zA-ZñÑáÁéÉíÍóÓúÚ\s]+$/.test(value);
     }
 
@@ -155,7 +155,7 @@ class Validator {
      *   Parámetros: $value (dato a validar).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateAlphanumeric(value) {
+    static validateAlphanumeric(value) {
         return /^[a-zA-Z0-9ñÑáÁéÉíÍóÓúÚ\s]+$/.test(value);
     }
 
@@ -164,7 +164,7 @@ class Validator {
      *   Parámetros: $value (dato a validar), $min (longitud mínima) y $max (longitud máxima).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateLength(value, min, max) {
+    static validateLength(value, min, max) {
         return typeof value === 'string' && value.length >= min && value.length <= max;
     }
 
@@ -173,18 +173,18 @@ class Validator {
      *   Parámetros: $value (dato a validar).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateMoney(value) {
+    static validateMoney(value) {
         return /^[0-9]+(?:\.[0-9]{1,2})?$/.test(value);
     }
 
     // Método para validar un correo electrónico.
-    validateEmail(value) {
+    static validateEmail(value) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(value);
     }
 
     // Método para validar una contraseña.
-    validatePassword(value, name, lastname, birthday, phone, email) {
+    static validatePassword(value, name, lastname, birthday, phone, email) {
         if (value.length < 8) {
             this.passwordError = 'Clave menor a 8 caracteres';
             return false;
@@ -233,13 +233,13 @@ class Validator {
     }
 
     // Método para validar un número telefónico.
-    validatePhone(value) {
+    static validatePhone(value) {
         const phoneRegex = /^[267][0-9]{3}-[0-9]{4}$/;
         return phoneRegex.test(value);
     }
 
     // Método para validar un DUI.
-    validateDUI(value) {
+    static validateDUI(value) {
         const duiRegex = /^[0-9]{8}-[0-9]{1}$/;
         return duiRegex.test(value);
     }
@@ -249,7 +249,7 @@ class Validator {
      *   Parámetros: $value (dato a validar).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateDate(value) {
+    static validateDate(value) {
         const dateParts = value.split('-').map(part => parseInt(part, 10));
         if (dateParts.length !== 3) return false;
 
@@ -263,7 +263,7 @@ class Validator {
      *   Parámetros: $value (dato a validar).
      *   Retorno: booleano (true si el valor es correcto o false en caso contrario).
      */
-    validateSearch(value) {
+    static validateSearch(value) {
         if (value.trim() === '') {
             this.searchError = 'Ingrese un valor para buscar';
             return false;
@@ -284,7 +284,7 @@ class Validator {
      *   Parámetros: $file (archivo), $path (ruta del archivo) y $name (nombre del archivo).
      *   Retorno: booleano (true si el archivo fue subido al servidor o false en caso contrario).
      */
-    saveFile(file, path) {
+    static saveFile(file, path) {
         if (!file) {
             return false;
         }
@@ -302,7 +302,7 @@ class Validator {
      *   Parámetros: $file (archivo), $path (ruta del archivo) y $old_filename (nombre del archivo anterior).
      *   Retorno: booleano (true si el archivo fue subido al servidor o false en caso contrario).
      */
-    changeFile(file, path, oldFilename) {
+    static changeFile(file, path, oldFilename) {
         if (!this.saveFile(file, path)) {
             return false;
         }
@@ -314,7 +314,7 @@ class Validator {
      *   Parámetros: $path (ruta del archivo) y $filename (nombre del archivo).
      *   Retorno: booleano (true si el archivo fue borrado del servidor o false en caso contrario).
      */
-    deleteFile(path, filename) {
+    static deleteFile(path, filename) {
         if (filename === 'default.png') {
             return true;
         }
@@ -332,7 +332,7 @@ class Validator {
     * @param {string} value - El dato a validar.
     * @returns {string|boolean} - Retorna la hora en formato "HH:MM:SS" si es válida, o `false` si no cumple con el formato.
     */
-    validateTime(value) {
+    static validateTime(value) {
         // Expresión regular para verificar el formato de hora HH:MM[:SS]
         const timeRegex = /^(2[0-3]|[01][0-9]):([0-5][0-9])(?::([0-5][0-9]))?$/;
         const matches = value.match(timeRegex);
@@ -353,7 +353,7 @@ class Validator {
      * @param {number} max - La edad máxima permitida.
      * @returns {boolean} - Retorna `true` si la fecha es válida y dentro del rango de edad, `false` en caso contrario.
      */
-    validateDateBirthday(value, min, max) {
+    static validateDateBirthday(value, min, max) {
         const dateValue = new Date(value);
         const currentDate = new Date();
         const minDate = new Date();
@@ -374,7 +374,7 @@ class Validator {
      * @param {number|string} value - El valor a validar.
      * @returns {boolean} - Retorna `true` si el valor es un número decimal positivo, `false` en caso contrario.
      */
-    validatePositiveDecimal(value) {
+    static validatePositiveDecimal(value) {
         const number = parseFloat(value);
         return !isNaN(number) && number > 0;
     }
@@ -384,7 +384,7 @@ class Validator {
      * @param {string} value - El dato a validar en formato "YYYY-MM-DDTHH:MM:SS".
      * @returns {string|boolean} - Retorna la fecha en formato "YYYY-MM-DD HH:MM:SS" si es válida, o `false` si no cumple con el formato.
      */
-    validateDateTime(value) {
+    static validateDateTime(value) {
         const dateTimeRegex = /^(\d{4})-(\d{2})-(\d{2})T(2[0-3]|[01][0-9]):([0-5][0-9])(?::([0-5][0-9]))?$/;
         const matches = value.match(dateTimeRegex);
         if (matches) {
@@ -401,7 +401,7 @@ class Validator {
 
 
     // Método para generar un salt basado en un DUI
-    generarSalt(dui) {
+    static generarSalt(dui) {
         const caracteresEspeciales = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')'];
         const alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -465,7 +465,7 @@ class Validator {
     }
 
     // Método auxiliar para calcular el factorial
-    factorial(n) {
+    static factorial(n) {
         return n <= 1 ? 1 : n * this.factorial(n - 1);
     }
 

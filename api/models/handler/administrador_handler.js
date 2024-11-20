@@ -26,7 +26,7 @@ class AdministradoresHandler {
 
     // Método para insertar un administrador
     async createRow() {
-        const sql = `CALL insertar_administrador(?, ?, ?, ?, ?, ?, ?);`;
+        const procedureName = 'insertar_administrador';
         const params = [
             this.nombre,
             this.correo,
@@ -36,7 +36,7 @@ class AdministradoresHandler {
             this.direccion,
             this.nacimiento
         ];
-        return await db.executeRow(sql, params);
+        return await db.executeProcedure(procedureName, params);
     }
 
     // Método para leer todos los administradors
@@ -54,7 +54,7 @@ class AdministradoresHandler {
 
     // Método para actualizar un administrador
     async updateRow() {
-        const sql = `CALL actualizar_administrador(?, ?, ?, ?, ?, ?, ?, ?);`;
+        const procedureName = `actualizar_administrador`;
         const params = [
             this.id,
             this.nombre,
@@ -65,21 +65,21 @@ class AdministradoresHandler {
             this.nacimiento,
             this.estado
         ];
-        return await db.executeRow(sql, params);
+        return await db.executeProcedure(procedureName, params);
     }
 
     // Método para eliminar un administrador
     async deleteRow() {
-        const sql = `CALL eliminar_administrador(?);`;
+        const procedureName = `eliminar_administrador`;
         const params = [this.id];
-        return await db.executeRow(sql, params);
+        return await db.executeProcedure(procedureName, params);
     }
 
     // Método para cambiar el estado de un administrador
     async changeState() {
-        const sql = `CALL actualizar_estado_administrador(?);`;
+        const procedureName = `actualizar_estado_administrador`;
         const params = [this.id];
-        return await db.executeRow(sql, params);
+        return await db.executeProcedure(procedureName, params);
     }
 }
 

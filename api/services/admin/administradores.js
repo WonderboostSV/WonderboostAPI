@@ -177,7 +177,7 @@ router.post('/', async (req, res) => {
 
                 // Acción no disponible
                 default:
-                    result.error = 'Acción no disponible';
+                    result.error = 'Acción no disponible dentro de la sesión';
             }
         } else {
             // Si no hay sesión activa, permitimos acciones como login, recuperación de contraseña, 2FA, etc.
@@ -227,7 +227,7 @@ router.post('/', async (req, res) => {
                     break;
 
                 default:
-                    result.error = 'Acción no disponible';
+                    result.error = 'Acción no disponible fuera de la sesión';
             }
         }
     }

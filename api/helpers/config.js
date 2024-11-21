@@ -4,7 +4,7 @@ const path = require('path');
 
 // Verifica si el archivo .env existe
 const fs = require('fs');
-const envPath = path.join(__dirname, '.env');
+const envPath = path.join('', '.env');
 
 if (!fs.existsSync(envPath)) {
     throw new Error(`El archivo .env no existe en la ruta ${envPath}`);

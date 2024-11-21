@@ -1,9 +1,5 @@
-// Cargar el paquete 'dotenv' para cargar variables de entorno desde un archivo .env
-require('dotenv').config();
-// session.js
 const session = require('express-session');
 
-// Configuración de la sesión
 const sessionConfig = {
   secret: process.env.CLAVE_SESION, // Cambia esto por algo seguro
   resave: false,

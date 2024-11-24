@@ -102,6 +102,12 @@ class AdministradoresHandler {
             return false;
         }
     }
+    
+    // Función que retorna a su estado original la variable de condición
+    async resetCondition()
+    {
+        return this.condicion = null;
+    }
 
     // Metodos para cuando haya una sesión de administrador activa
     // Método para buscar un administrador o varios

@@ -19,35 +19,6 @@ const POST_DIRECCION = "direccionAdministrador";
 const POST_CLAVE_CONFIRMAR = "confirmarClave";
 const POST_BUSCAR = "search";
 
-// Middleware para verificar si la sesión o JWT es válida
-const verifySession = (req, res, next) => {
-    // Usamos express-session o JWT para verificar la sesión
-    if (req.session && req.session.idAdministrador) {
-        // Si la sesión es válida, pasamos al siguiente middleware
-        next();
-    } else {
-        // Si no hay sesión, devolvemos un error
-        res.status(403).json({ error: 'No has iniciado sesión' });
-    }
-};
-
-// Middleware para verificar el JWT en las solicitudes
-const verifyJWT = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) {
-        return res.status(403).json({ error: 'Token de autenticación no proporcionado' });
-    }
-
-    jwt.verify(token, process.env.CLAVE_JWT, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ error: 'Token no válido' });
-        }
-        // Almacenamos los datos del usuario decodificado en el request
-        req.user = decoded;
-        next();
-    });
-};
-
 // Controlador para manejar las acciones de la API
 router.get('/', (req, res) => {
     res.json({ message: 'Recurso no disponible' });
@@ -60,13 +31,13 @@ router.post('/', async (req, res) => {
 
     try {
         // Verificamos si la sesión está activa o si el usuario tiene un JWT válido
-        if (req.session.idAdministrador || req.user) {
+        if (req.session.idAdministrador && req.user) {
             // Si la sesión está activa o el JWT es válido, permitimos las acciones de manejo interno de sistema
 
             switch (action) {
                 // Buscar
                 case 'searchRows':
-                    if (!Validator.validateSearch2(req.body[POST_BUSCAR])) {
+                    if (!Validator.validateSearch(req.body[POST_BUSCAR])) {
                         result.error = Validator.getSearchError();
                     } else {
                         result.dataset = await Administrador.searchRows(req.body[POST_BUSCAR]);

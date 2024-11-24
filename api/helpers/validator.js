@@ -1,5 +1,6 @@
 const fs = require('fs'); // Módulo para trabajar con el sistema de archivos
 const path = require('path'); // Módulo para trabajar con rutas de archivos y directorios
+const sharp = require('sharp');
 
 class Validator {
     constructor() {
@@ -40,6 +41,12 @@ class Validator {
         return fields.map(field => field.trim());
     }
 
+    // Método para validar un UUID (versión 4 estándar)
+    static validateUUID(value) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return typeof value === 'string' && uuidRegex.test(value);
+    }
+
     // Método para validar un número natural (entero mayor o igual a 1).
     static validateNaturalNumber(value) {
         return Number.isInteger(value) && value >= 1;
@@ -50,20 +57,83 @@ class Validator {
         return Number.isInteger(value) && value >= 0;
     }
 
-    // Método para validar un archivo de imagen.
-    static validateImageFile(file, dimension) {
+    // Método para validar y convertir un archivo de imagen
+    static async validateAndConvertImage(file, dimension) {
         const validTypes = ['image/jpeg', 'image/png'];
         if (file && file.mimetype && validTypes.includes(file.mimetype)) {
             if (file.size > 2097152) {
                 this.fileError = 'El tamaño de la imagen debe ser menor a 2MB';
                 return false;
-            } else {
-                const extension = file.mimetype.split('/')[1];
-                this.filename = `${Date.now()}.${extension}`;
+            }
+
+            const extension = 'webp'; // Puedes usar 'avif' para AVIF
+            const filename = `${Date.now()}.${extension}`;
+            const outputPath = path.join(__dirname, 'uploads', filename);
+
+            try {
+                await sharp(file.buffer) // Buffer del archivo recibido
+                    .resize(dimension.width, dimension.height, {
+                        fit: sharp.fit.cover,
+                    })
+                    .toFormat(extension, { quality: 80 }) // WebP o AVIF con calidad ajustada
+                    .toFile(outputPath);
+
+                this.filename = filename;
                 return true;
+            } catch (error) {
+                this.fileError = 'Error al procesar la imagen';
+                return false;
             }
         } else {
             this.fileError = 'El tipo de imagen debe ser jpg o png';
+            return false;
+        }
+    }
+
+    /*
+     *   Método para validar un archivo al momento de subirlo al servidor.
+     *   Parámetros: $file (archivo), $path (ruta del archivo) y $name (nombre del archivo).
+     *   Retorno: booleano (true si el archivo fue subido al servidor o false en caso contrario).
+     */
+    static saveFile(file, path) {
+        if (!file) {
+            return false;
+        }
+        try {
+            fs.renameSync(file.path, path + this.filename);
+            return true;
+        } catch (error) {
+            console.error('Error al mover el archivo:', error);
+            return false;
+        }
+    }
+
+    /*
+     *   Método para validar el cambio de un archivo en el servidor.
+     *   Parámetros: $file (archivo), $path (ruta del archivo) y $old_filename (nombre del archivo anterior).
+     *   Retorno: booleano (true si el archivo fue subido al servidor o false en caso contrario).
+     */
+    static changeFile(file, path, oldFilename) {
+        if (!this.saveFile(file, path)) {
+            return false;
+        }
+        return this.deleteFile(path, oldFilename);
+    }
+
+    /*
+     *   Método para validar un archivo al momento de borrarlo del servidor.
+     *   Parámetros: $path (ruta del archivo) y $filename (nombre del archivo).
+     *   Retorno: booleano (true si el archivo fue borrado del servidor o false en caso contrario).
+     */
+    static deleteFile(path, filename) {
+        if (filename === 'default.png') {
+            return true;
+        }
+        try {
+            fs.unlinkSync(path + filename);
+            return true;
+        } catch (error) {
+            console.error('Error al eliminar el archivo:', error);
             return false;
         }
     }
@@ -275,54 +345,6 @@ class Validator {
             return true;
         } else {
             this.searchError = 'La búsqueda contiene caracteres prohibidos';
-            return false;
-        }
-    }
-
-    /*
-     *   Método para validar un archivo al momento de subirlo al servidor.
-     *   Parámetros: $file (archivo), $path (ruta del archivo) y $name (nombre del archivo).
-     *   Retorno: booleano (true si el archivo fue subido al servidor o false en caso contrario).
-     */
-    static saveFile(file, path) {
-        if (!file) {
-            return false;
-        }
-        try {
-            fs.renameSync(file.path, path + this.filename);
-            return true;
-        } catch (error) {
-            console.error('Error al mover el archivo:', error);
-            return false;
-        }
-    }
-
-    /*
-     *   Método para validar el cambio de un archivo en el servidor.
-     *   Parámetros: $file (archivo), $path (ruta del archivo) y $old_filename (nombre del archivo anterior).
-     *   Retorno: booleano (true si el archivo fue subido al servidor o false en caso contrario).
-     */
-    static changeFile(file, path, oldFilename) {
-        if (!this.saveFile(file, path)) {
-            return false;
-        }
-        return this.deleteFile(path, oldFilename);
-    }
-
-    /*
-     *   Método para validar un archivo al momento de borrarlo del servidor.
-     *   Parámetros: $path (ruta del archivo) y $filename (nombre del archivo).
-     *   Retorno: booleano (true si el archivo fue borrado del servidor o false en caso contrario).
-     */
-    static deleteFile(path, filename) {
-        if (filename === 'default.png') {
-            return true;
-        }
-        try {
-            fs.unlinkSync(path + filename);
-            return true;
-        } catch (error) {
-            console.error('Error al eliminar el archivo:', error);
             return false;
         }
     }

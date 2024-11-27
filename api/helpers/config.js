@@ -10,9 +10,6 @@ if (!fs.existsSync(envPath)) {
     throw new Error(`El archivo .env no existe en la ruta ${envPath}`);
 }
 
-// Configurar la zona horaria local
-process.env.TZ = 'America/El_Salvador';
-
 // Definir las variables de conexión a la base de datos usando las variables de entorno cargadas
 const config = {
     server: process.env.DB_SERVER,

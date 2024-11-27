@@ -1,0 +1,85 @@
+El archivo config.js centraliza la configuración del proyecto, 
+particularmente en lo relacionado con la conexión a la base de datos y la configuración de cabeceras. 
+Este archivo actúa como un punto único para acceder y definir parámetros clave. 
+A continuación, explicare cómo funciona, el uso de las herramientas que se emplean y los conceptos involucrados.
+
+
+Cómo funciona este archivo
+
+-Carga de variables de entorno
+require('dotenv').config();
+•	Función: Utilizo el paquete dotenv para cargar las variables de entorno definidas en un archivo .env. 
+Estas variables permiten configurar detalles sensibles y específicos del entorno, como credenciales de base de datos, 
+sin incluirlas directamente en el código.
+•	Ventaja: Mantener separada la configuración del código ayuda a mejorar la seguridad y facilita la personalización para 
+diferentes entornos (producción, desarrollo, pruebas).
+
+-Validación de la existencia del archivo .env
+const fs = require('fs');
+const path = require('path');
+const envPath = path.join('', '.env');
+
+if (!fs.existsSync(envPath)) {
+    throw new Error(`El archivo .env no existe en la ruta ${envPath}`);
+}
+
+•	Función: Antes de continuar, verifico si el archivo .env existe. 
+Esto garantiza que las configuraciones necesarias estén disponibles y evita errores más adelante.
+•	Conceptos:
+•	Manejo de errores: Si el archivo no existe, arrojo una excepción con un mensaje claro para que el desarrollador 
+solucione el problema rápidamente.
+•	Uso de módulos del sistema de archivos (fs) y rutas (path):
+•	fs.existsSync: Comprueba si un archivo o directorio existe en la ruta especificada.
+•	path.join: Construye rutas de manera compatible con distintos sistemas operativos.
+
+-Definición de la configuración de base de datos
+const config = {
+    server: process.env.DB_SERVER,
+    database: process.env.DB_DATABASE,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    dialect: process.env.DB_DIALECT
+};
+
+•	Función: Aquí defino un objeto config que contiene los parámetros necesarios para conectar la aplicación a la base de datos.
+•	Variables de entorno utilizadas:
+•	DB_SERVER: Dirección del servidor de la base de datos.
+•	DB_DATABASE: Nombre de la base de datos.
+•	DB_USERNAME y DB_PASSWORD: Credenciales de acceso.
+•	DB_DIALECT: Dialecto de base de datos (por ejemplo, mysql, postgres, etc.).
+•	Ventaja: Estas configuraciones son reutilizables en otras partes del proyecto y se pueden cambiar 
+fácilmente sin alterar el código fuente.
+
+-Configuración de encabezados para solicitudes HTTP
+const setHeaders = (res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+};
+
+•	Función: Defino una función setHeaders para establecer encabezados HTTP que permitan solicitudes desde cualquier origen.
+•	Concepto:
+•	CORS (Cross-Origin Resource Sharing): Este encabezado (Access-Control-Allow-Origin) 
+controla si el navegador permite que una aplicación web en un dominio haga solicitudes a otro dominio.
+•	Uso: Aunque esta función no está directamente integrada aquí, puede ser útil en el futuro si se requiere 
+configurar encabezados en las respuestas de manera consistente.
+
+-Exportación de módulos
+module.exports = { config, setHeaders };
+
+•	Función: Hago disponibles el objeto config y la función setHeaders para que otros archivos puedan utilizarlos.
+•	Concepto:
+•	Modularización: Este archivo actúa como un módulo independiente que encapsula las configuraciones y 
+las hace accesibles de forma centralizada en todo el proyecto.
+•	Ventaja: Permite un diseño limpio y reutilizable, ya que cualquier cambio en la configuración se hace en un solo lugar.
+
+Conceptos importantes utilizados en este archivo
+1.	Dotenv:
+•	Carga las variables de entorno desde un archivo .env, manteniendo la configuración sensible separada del código.
+2.	Módulos de Node.js:
+•	fs: Se utiliza para verificar si el archivo .env existe.
+•	path: Ayuda a construir rutas de manera segura para diferentes sistemas operativos.
+3.	Manejo de errores:
+•	Utilizo una excepción (throw new Error) para detener la ejecución si falta un archivo crítico como .env.
+4.	CORS (Cross-Origin Resource Sharing):
+•	La función setHeaders aborda una necesidad común al permitir solicitudes de diferentes dominios.
+5.	Modularización:
+•	La exportación de config y setHeaders garantiza que esta funcionalidad sea reutilizable en cualquier parte del proyecto.

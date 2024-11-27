@@ -16,7 +16,7 @@ const config = {
     database: process.env.DB_DATABASE,
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    dialect: process.env.DB_DIALECT// Agrega el dialecto de la base de datos
+    dialect: process.env.DB_DIALECT
 };
 
 // Encabezado para permitir solicitudes de cualquier origen (si se implementa un servidor HTTP más adelante)

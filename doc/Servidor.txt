@@ -3,6 +3,8 @@ El archivo server.js es el punto de entrada de la aplicación.
 Configura y pone en marcha el servidor Express, registra las rutas dinámicamente y maneja los errores. 
 A continuación, se desglosan las secciones y conceptos clave utilizados:
 
+Cómo funciona este archivo
+
 -Carga de variables de entorno
 require('dotenv').config();
 •	Función: Carga las variables definidas en un archivo .env para que estén disponibles como process.env.

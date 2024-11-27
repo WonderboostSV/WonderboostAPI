@@ -1,0 +1,50 @@
+Descripción de dependencias
+bcrypt y bcryptjs
+•	Versión: ^5.1.1 (bcrypt), ^2.4.3 (bcryptjs)
+•	Propósito:
+•	Permiten realizar el hash de contraseñas para aumentar la seguridad al almacenar datos sensibles.
+•	bcryptjs es una alternativa puramente en JavaScript, ideal para entornos donde bcrypt puede tener problemas de compatibilidad al compilar.
+connect-redis
+•	Versión: ^7.1.1
+•	Propósito:
+•	Proporciona un almacenamiento basado en Redis para sesiones de Express, útil para manejar sesiones de usuarios de manera eficiente.
+dotenv
+•	Versión: ^16.4.5
+•	Propósito:
+•	Carga variables de entorno desde un archivo .env para facilitar la configuración del entorno y mantener la seguridad de datos sensibles como claves o credenciales.
+express
+•	Versión: ^4.21.1
+•	Propósito:
+•	Framework para construir aplicaciones web y APIs en Node.js, proporciona herramientas para el manejo de rutas, middlewares y solicitudes HTTP.
+express-session
+•	Versión: ^1.18.1
+•	Propósito:
+•	Maneja sesiones de usuario en aplicaciones Express, almacenando datos como cookies y gestionando autenticación.
+handlebars
+•	Versión: ^4.7.8
+•	Propósito:
+•	Motor de plantillas que permite renderizar contenido dinámico en HTML, usado generalmente en vistas de aplicaciones web.
+jsonwebtoken
+•	Versión: ^9.0.2
+•	Propósito:
+•	Permite la creación y verificación de JSON Web Tokens (JWT) para manejar autenticación y autorización segura entre cliente y servidor.
+mysql2
+•	Versión: ^3.11.4
+•	Propósito:
+•	Biblioteca para interactuar con bases de datos MySQL, con mejor soporte para Promises que la versión original.
+nodemailer
+•	Versión: ^6.9.16
+•	Propósito:
+•	Herramienta para enviar correos electrónicos desde aplicaciones Node.js, soportando múltiples transportes como SMTP.
+redis
+•	Versión: ^4.7.0
+•	Propósito:
+•	Cliente para interactuar con bases de datos Redis, utilizado principalmente como cache para datos temporales o almacenamiento de sesiones.
+sequelize
+•	Versión: ^6.37.5
+•	Propósito:
+•	ORM (Object-Relational Mapping) para interactuar con bases de datos SQL, facilitando la creación, lectura, actualización y eliminación de datos sin escribir consultas SQL manuales.
+sharp
+•	Versión: ^0.33.5
+•	Propósito:
+•	Biblioteca para manipulación de imágenes, como redimensionar, comprimir o convertir formatos, útil para manejo de archivos multimedia.

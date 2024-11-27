@@ -1,0 +1,77 @@
+Explicación del funcionamiento del archivo server.js
+El archivo server.js es el punto de entrada de la aplicación. 
+Configura y pone en marcha el servidor Express, registra las rutas dinámicamente y maneja los errores. 
+A continuación, se desglosan las secciones y conceptos clave utilizados:
+
+-Carga de variables de entorno
+require('dotenv').config();
+•	Función: Carga las variables definidas en un archivo .env para que estén disponibles como process.env.
+•	Uso: Permite separar la configuración sensible (como claves o puertos) del código fuente.
+-Configuración de Express
+const express = require('express');
+const app = express();
+•	Express: Es el framework principal para manejar rutas, solicitudes y respuestas en tu API.
+•	app: Representa la instancia de tu aplicación, utilizada para configurar middlewares, rutas y la lógica del servidor.
+-Uso de Middlewares
+Middleware para analizar JSON
+app.use(express.json());
+Función: Permite que el servidor acepte solicitudes con un cuerpo en formato JSON, necesario para manejar datos enviados por clientes.
+Configuración de sesiones
+const { setupSession } = require('./api/helpers/session'); 
+setupSession(app);
+•	Función: Configura el manejo de sesiones reutilizando una función modular (setupSession) ubicada en api/helpers/session.js.
+•	Concepto: La modularización permite mantener el código organizado al separar configuraciones reutilizables en archivos dedicados.
+-Registro automático de rutas
+const registerRoutes = (basePath) => {
+    const servicesPath = path.join(__dirname, basePath);
+    fs.readdirSync(servicesPath).forEach((folder) => {
+        const folderPath = path.join(servicesPath, folder);
+        if (fs.lstatSync(folderPath).isDirectory()) {
+            fs.readdirSync(folderPath).forEach((file) => {
+                if (file.endsWith('.js')) {
+                    const routePath = `/${folder}/${file.replace('.js', '')}`;
+                    const router = require(path.join(folderPath, file));
+                    app.use(routePath, router);
+                    console.log(`Ruta registrada: ${routePath}`);
+                }
+            });
+        }
+    });
+};
+
+•	Función: Registra automáticamente rutas desde la carpeta api/services.
+•	Proceso:
+1.	Recorre todas las subcarpetas y archivos dentro de la carpeta api/services.
+2.	Carga dinámicamente los archivos .js como módulos.
+3.	Asocia cada archivo como una ruta en el servidor usando app.use(routePath, router).
+•	Ventaja: Agregar nuevas rutas no requiere modificar este archivo; basta con crear el archivo correspondiente en la carpeta services.
+Ejemplo: Un archivo api/services/admin/admin.js se registrará como la ruta /admin/admin
+-Manejo de errores
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Ocurrió un error en el servidor' });
+});
+•	Función: Middleware para capturar errores no manejados en el servidor.
+•	Comportamiento: Si una operación falla y no se maneja adecuadamente, se responde con un error genérico y código de estado 500.
+-Inicio del servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
+•	Función: Pone en marcha el servidor Express en el puerto definido en process.env.PORT o en el puerto 3000 por defecto.
+•	Uso de variables de entorno: Facilita la configuración del puerto para diferentes entornos (desarrollo, producción, pruebas, etc.).
+
+Conceptos clave utilizados
+1.	Modularización:
+•	Ejemplo: setupSession y las rutas en api/services.
+•	Se divide la lógica en archivos y funciones independientes, lo que mejora la mantenibilidad del proyecto.
+2.	Middlewares:
+•	Componentes reutilizables que procesan solicitudes antes de llegar a las rutas finales.
+•	Ejemplo: express.json() para parsear JSON y el manejo de errores.
+3.	Carga dinámica:
+•	Uso de fs y path para registrar rutas automáticamente.
+•	Mejora la escalabilidad al permitir agregar rutas sin editar el archivo principal.
+4.	Gestión de errores:
+•	Garantiza que los problemas se manejen adecuadamente y no afecten la estabilidad del servidor.
+
+

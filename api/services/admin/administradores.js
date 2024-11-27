@@ -20,7 +20,7 @@ const FIELDS = {
     CLAVE_CONFIRMAR: "confirmarClave",
     BUSCAR: "search"
 };
-// POST: Maneja logIn, signUp, createRow, searchRows
+// POST: Maneja metodos de creación de datos
 router.post('/', async (req, res) => {
     const { action } = req.query;
     const result = { status: 0, message: null, dataset: null, error: null, exception: null };
@@ -118,7 +118,7 @@ router.post('/', async (req, res) => {
     }
     res.json(result);
 });
-// PUT: Maneja updateRow, changeState, recoverPassword
+// PUT: Maneja metodos de edición de datos
 router.put('/', async (req, res) => {
     const { action } = req.query;
     const result = { status: 0, message: null, dataset: null, error: null, exception: null };

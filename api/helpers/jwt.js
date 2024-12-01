@@ -1,23 +1,37 @@
-// Cargar el paquete 'dotenv' para cargar variables de entorno desde un archivo .env
 require('dotenv').config();
-// jwt.js
 const jwt = require('jsonwebtoken');
-const secretKey = process.env.CLAVE_JWT; // Cambia esto por algo seguro
+
+const secretKey = process.env.CLAVE_JWT;
 
 // Función para generar un JWT
-const generateJWT = (userId) => {
-  const payload = { userId };
-  const options = { expiresIn: '1h' }; // Tiempo de expiración del token
-  return jwt.sign(payload, secretKey, options);
+const generateJWT = (userData) => {
+  const options = { expiresIn: '1h' };
+  return jwt.sign(userData, secretKey, options);
 };
 
-// Función para verificar un JWT
-const verifyJWT = (token) => {
+// Middleware para verificar un JWT en las solicitudes de Express
+const verifyJWT = (req, res, next) => {
+  const token = req.headers['authorization']; // Leer el token del encabezado
+  if (!token) {
+    return res.status(403).json({ message: 'Token no proporcionado' });
+  }
+
   try {
-    return jwt.verify(token, secretKey);
+    const decoded = jwt.verify(token, secretKey); // Verificar token
+    req.user = decoded; // Agregar el usuario decodificado a la solicitud
+    next();
   } catch (error) {
-    return null; // Si no es válido
+    return res.status(401).json({ message: 'Token inválido o expirado' });
   }
 };
 
-module.exports = { generateJWT, verifyJWT };
+// Función para validar un JWT directamente (opcional)
+const validateJWT = (token) => {
+  try {
+    return jwt.verify(token, secretKey);
+  } catch (error) {
+    return null;
+  }
+};
+
+module.exports = { generateJWT, verifyJWT, validateJWT };

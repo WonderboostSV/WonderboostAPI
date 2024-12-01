@@ -1,6 +1,5 @@
 const db = require('../../helpers/database'); // Importamos el archivo de la base de datos
 const { generateJWT } = require('../../helpers/jwt');
-const { setupSession } = require('../../helpers/session');
 const bcrypt = require('bcryptjs');
 
 class AdministradoresHandler {
@@ -83,19 +82,18 @@ class AdministradoresHandler {
             const isPasswordValid = bcrypt.compareSync(password, data.CLAVE);
 
             if (!isPasswordValid) return false;
-
-            // Guardar datos en la sesión
-            req.session.user = {
+            
+            // Generar un JWT con los datos del usuario
+            const userData = {
                 id: data.ID,
                 alias: data.ALIAS,
                 correo: data.CORREO,
                 nombreCompleto: data.NOMBRECOMPLETO,
                 foto: data.FOTO,
             };
-
-            // Generar un JWT para autenticación adicional
-            const token = generateJWT(data.ID);
-
+            const token = generateJWT(userData);
+    
+            // Devuelve el token como parte de la respuesta
             return { status: 'success', token };
         } catch (error) {
             console.error('Error en checkUser:', error);

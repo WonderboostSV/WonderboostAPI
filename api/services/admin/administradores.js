@@ -1,11 +1,12 @@
-// Cargar el paquete 'dotenv' para cargar variables de entorno desde un archivo .env
-require('dotenv').config();
+require('dotenv').config(); // Cargar el paquete 'dotenv' para cargar variables de entorno desde un archivo .env
 const express = require('express');
-const router = express.Router();
+const router = express.Router(); // Este será el primer router, encargado de manejar las acciones cuando se proporcione la jwt
+const secondRouter = express.Router(); // Este será el segundo router, encargado de manejar las acciones cuando no se proporcione la jwt
 const AdministradoresData = require('../../models/data/administradores_data');
 const Validator = require('../../helpers/validator');
-const jwt = require('jsonwebtoken'); // Para verificar el JWT
-
+const { verifyJWT } = require('../../helpers/jwt');
+const messages = require('../../helpers/messages');
+const { validateBody, validateAction } = require('../../helpers/petitions');
 // Constantes de campos
 const FIELDS = {
     ID: "idAdministrador",
@@ -20,98 +21,75 @@ const FIELDS = {
     CLAVE_CONFIRMAR: "confirmarClave",
     BUSCAR: "search"
 };
-// POST: Maneja metodos de creación de datos
-router.post('/', async (req, res) => {
+// Acciones para post
+const postActions = ['createRow', 'searchRows'];
+const postActions2 = ['login', 'signup'];
+// Acciones para put
+const putActions = ['updateRow', 'changeState'];
+const putActions2 = ['recoverPassword'];
+// Acciones para delete
+const deleteActions = ['deleteRow'];
+// Acciones para get
+const getActions = ['readAll', 'readOne'];
+// Instancias para los mensajes
+const instance = {
+    singular: 'Administrador',
+    minuscula: 'del administrador',
+    plural: 'administradores',
+    error: 'el administrador'
+};
+// Crear result, con los datos que devolvera el json
+const createResult = () => ({ status: 0, message: null, dataset: null, error: null, exception: null });
+// Crear la instancia de la clase AdministradoresData
+const instanceAdministradorData = () => (new AdministradoresData());
+// Asignarle al result el arreglo
+const result = createResult();
+// Asignarle al objeto Administrador la instancia a AdministradorData
+const Administrador = instanceAdministradorData();
+// Asegurarse que todas las rutas a continuación requieren verificación de JWT
+router.use(verifyJWT);  // Esto asegura que todas las rutas de abajo requieren JWT
+// POST: Maneja metodos de creación de datos cuando haya sesión activa
+router.post('/', validateBody, validateAction(postActions), async (req, res) => {
     const { action } = req.query;
-    const result = { status: 0, message: null, dataset: null, error: null, exception: null };
-    const Administrador = new AdministradoresData();
-
     try {
-        if (req.session.idAdministrador && req.user) {
-            switch (action) {
-                // Crear fila
-                case 'createRow':
-                    req.body = Validator.validateForm(req.body);
-                    if (
-                        !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
-                        !Administrador.setCorreo(req.body[FIELDS.CORREO]) ||
-                        !Administrador.setClave(req.body[FIELDS.CLAVE], req.body[FIELDS.NOMBRE], req.body[FIELDS.NACIMIENTO], req.body[FIELDS.TELEFONO], req.body[FIELDS.CORREO]) ||
-                        !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
-                        !Administrador.setDUI(req.body[FIELDS.DUI]) ||
-                        !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
-                        !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO])
-                    ) {
-                        result.error = Administrador.getDataError();
-                    } else if (req.body[FIELDS.CLAVE] !== req.body[FIELDS.CLAVE_CONFIRMAR]) {
-                        result.error = 'Contraseñas diferentes';
-                    } else if (await Administrador.createRow()) {
+        switch (action) {
+            // Crear fila
+            case 'createRow':
+                if (
+                    !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
+                    !Administrador.setCorreo(req.body[FIELDS.CORREO]) ||
+                    !Administrador.setClave(req.body[FIELDS.CLAVE], req.body[FIELDS.NOMBRE], req.body[FIELDS.NACIMIENTO], req.body[FIELDS.TELEFONO], req.body[FIELDS.CORREO]) ||
+                    !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
+                    !Administrador.setDUI(req.body[FIELDS.DUI]) ||
+                    !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
+                    !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO])
+                ) {
+                    result.error = Administrador.getDataError();
+                } else if (req.body[FIELDS.CLAVE] !== req.body[FIELDS.CLAVE_CONFIRMAR]) {
+                    result.error = messages.error.pass;
+                } else if (await Administrador.createRow()) {
+                    result.status = 1;
+                    result.message = messages.success.create(instance.singular);
+                } else {
+                    result.error = messages.error.create(instance.error);
+                }
+                break;
+            // Buscar datos
+            case 'searchRows':
+                if (!Validator.validateSearch(req.body[FIELDS.BUSCAR])) {
+                    result.error = Validator.getSearchError();
+                } else {
+                    result.dataset = await Administrador.searchRows(req.body[FIELDS.BUSCAR]);
+                    if (result.dataset && result.dataset.length > 0) {
                         result.status = 1;
-                        result.message = 'Administrador creado correctamente';
+                        result.message = messages.success.search(result.dataset.length);
                     } else {
-                        result.error = 'Ocurrió un problema al crear el Administrador';
+                        result.error = messages.error.search;
                     }
-                    break;
-                // Buscar datos
-                case 'searchRows':
-                    if (!Validator.validateSearch(req.body[FIELDS.BUSCAR])) {
-                        result.error = Validator.getSearchError();
-                    } else {
-                        result.dataset = await Administrador.searchRows(req.body[FIELDS.BUSCAR]);
-                        if (result.dataset && result.dataset.length > 0) {
-                            result.status = 1;
-                            result.message = `Existen ${result.dataset.length} coincidencias`;
-                        } else {
-                            result.error = 'No hay coincidencias';
-                        }
-                    }
-                    break;
-                default:
-                    result.error = 'Acción POST no válida dentro de la sesión';
-            }
-        } else {
-            switch (action) {
-                // Inicio de sesión
-                case 'logIn':
-                    req.body = Validator.validateForm(req.body);
-                    // Llamamos al método checkUser del handler
-                    const user = await Administrador.checkUser(req.body[FIELDS.CORREO], req.body[FIELDS.CLAVE], req);
-                    // Si el usuario fue encontrado y la autenticación es exitosa
-                    if (user) {
-                        if (Administrador.getCondicion() === 'temporizador') {
-                            result.error = 'Intento iniciar sesión varias veces y su tiempo de bloqueo aun no ha acabado';
-                        } else if (Administrador.getCondicion() === 'clave') {
-                            result.error = 'Debes cambiar la contraseña, ya han pasado 90 días. Se te ha enviado un correo para realizar el proceso.';
-                        } else if (Administrador.getCondicion() === 'tiempo') {
-                            result.error = 'Ha intentado iniciar sesión demasiadas veces. Su cuenta será bloqueada por un día.';
-                        } else if (Administrador.getCondicion() === 'bloqueado') {
-                            result.error = 'Su cuenta ha sido bloqueada. Contacte a los administradores.';
-                        } else {
-                            // Autenticación exitosa
-                            const token = jwt.sign({ idAdministrador: Administrador.id }, process.env.CLAVE_JWT, { expiresIn: '1h' });
-                            result.status = 1;
-                            result.message = 'Autenticación exitosa';
-                            result.token = token;
-                        }
-                    } else {
-                        // Si las credenciales son incorrectas, agregamos un intento
-                        if (Administrador.addAttempt()) {
-                            result.error = 'Credenciales incorrectas';
-                        } else {
-                            result.exception = 'Error en el servidor';
-                        }
-                    }
-
-                    // Reiniciamos la condición del administrador
-                    Administrador.resetCondition();
-                    break;
-                // Registro
-                case 'signUp':
-                    result.message = 'Acción signUp ejecutada';
-                    // Lógica para signUp
-                    break;
-                default:
-                    result.error = 'Acción no disponible fuera de la sesión';
-            }
+                }
+                break;
+            default:
+                result.error = messages.error.session;
         }
     } catch (error) {
         result.exception = error.message;
@@ -119,145 +97,169 @@ router.post('/', async (req, res) => {
     res.json(result);
 });
 // PUT: Maneja metodos de edición de datos
-router.put('/', async (req, res) => {
+router.put('/', validateBody, validateAction(putActions), async (req, res) => {
     const { action } = req.query;
-    const result = { status: 0, message: null, dataset: null, error: null, exception: null };
-    const Administrador = new AdministradoresData();
-
     try {
-        if (req.session.idAdministrador && req.user) {
-            switch (action) {
-                // Actualizar un campo
-                case 'updateRow':
-                    req.body = Validator.validateForm(req.body);
-                    if (
-                        !Administrador.setId(req.body[FIELDS.ID]) ||
-                        !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
-                        !Administrador.setCorreo(req.body[FIELDS.CORREO]) ||
-                        !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
-                        !Administrador.setDUI(req.body[FIELDS.DUI]) ||
-                        !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
-                        !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO]) ||
-                        !Administrador.setEstado(req.body[FIELDS.ESTADO] ? 1 : 0)
-                    ) {
-                        result.error = Administrador.getDataError();
-                    } else if (await Administrador.updateRow()) {
-                        result.status = 1;
-                        result.message = 'Administrador modificado correctamente';
-                    } else {
-                        result.error = 'Ocurrió un problema al modificar el Administrador';
-                    }
-                    break;
-                // Cambiar el estado
-                case 'changeState':
-                    if (!Administrador.setId(req.body[FIELDS.ID])) {
-                        result.error = Administrador.getDataError();
-                    } else if (await Administrador.changeState()) {
-                        result.status = 1;
-                        result.message = 'Estado del Administrador cambiado correctamente';
-                    } else {
-                        result.error = 'Ocurrió un problema al alterar el estado del Administrador';
-                    }
-                    break;
-                default:
-                    result.error = 'Acción no disponible dentro de la sesión';
-            }
-        } else {
-            switch (action) {
-                // Recuperar contraseña
-                case 'recoverPassword':
-                    // Lógica para recuperación de contraseña
-                    break;
-                default:
-                    result.error = 'Acción no disponible fuera de la sesión';
-            }
+        switch (action) {
+            // Actualizar un campo
+            case 'updateRow':
+                if (
+                    !Administrador.setId(req.body[FIELDS.ID]) ||
+                    !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
+                    !Administrador.setCorreo(req.body[FIELDS.CORREO]) ||
+                    !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
+                    !Administrador.setDUI(req.body[FIELDS.DUI]) ||
+                    !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
+                    !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO]) ||
+                    !Administrador.setEstado(req.body[FIELDS.ESTADO] ? 1 : 0)
+                ) {
+                    result.error = Administrador.getDataError();
+                } else if (await Administrador.updateRow()) {
+                    result.status = 1;
+                    result.message = messages.success.update(instance.singular);
+                } else {
+                    result.error = messages.error.update(instance.error);
+                }
+                break;
+            // Cambiar el estado
+            case 'changeState':
+                if (!Administrador.setId(req.body[FIELDS.ID])) {
+                    result.error = Administrador.getDataError();
+                } else if (await Administrador.changeState()) {
+                    result.status = 1;
+                    result.message = messages.success.state(instance.minuscula);
+                } else {
+                    result.error = messages.error.state(instance.minuscula);
+                }
+                break;
+            default:
+                result.error = messages.error.session;
         }
     } catch (error) {
         result.exception = error.message;
     }
     res.json(result);
 });
-// DELETE: Maneja metodos de eliminación de datos
-router.delete('/', async (req, res) => {
+// DELETE: Maneja metodos de eliminación de datos cuando haya sesión activa
+router.delete('/', validateBody, validateAction(deleteActions), async (req, res) => {
     const { action } = req.query;
-    const result = { status: 0, message: null, dataset: null, error: null, exception: null };
-    const Administrador = new AdministradoresData();
-
     try {
-        if (req.session.idAdministrador && req.user) {
-            switch (action) {
-                // Eliminar
-                case 'deleteRow':
-                    if (!Administrador.setId(req.body[FIELDS.ID])) {
-                        result.error = Administrador.getDataError();
-                    } else if (await Administrador.deleteRow()) {
-                        result.status = 1;
-                        result.message = 'Administrador eliminado correctamente';
-                    } else {
-                        result.error = 'Ocurrió un problema al eliminar el Administrador';
-                    }
-                    break;
-                default:
-                    result.error = 'Acción no disponible dentro de la sesión';
-            }
-        } else {
-            switch (action) {
-
-                default:
-                    result.error = 'Acción no disponible fuera de la sesión';
-            }
+        switch (action) {
+            // Eliminar
+            case 'deleteRow':
+                if (!Administrador.setId(req.body[FIELDS.ID])) {
+                    result.error = Administrador.getDataError();
+                } else if (await Administrador.deleteRow()) {
+                    result.status = 1;
+                    result.message = messages.success.delete(instance.singular);
+                } else {
+                    result.error = messages.error.delete(instance.error);
+                }
+                break;
+            default:
+                result.error = messages.error.session;
         }
     } catch (error) {
         result.exception = error.message;
     }
     res.json(result);
 });
-// GET: Maneja metodos de lectura de datos
-router.get('/', async (req, res) => {
+// GET: Maneja metodos de lectura de datos cuando haya sesión activa
+router.get('/', validateBody, validateAction(getActions), async (req, res) => {
     const { action } = req.query;
-    const result = { status: 0, message: null, dataset: null, error: null, exception: null };
-    const Administrador = new AdministradoresData();
-
     try {
-        if (req.session.idAdministrador && req.user) {
-            switch (action) {
-                // Ver todos
-                case 'readAll':
-                    result.dataset = await Administrador.readAll();
-                    if (result.dataset && result.dataset.length > 0) {
+        switch (action) {
+            // Ver todos
+            case 'readAll':
+                result.dataset = await Administrador.readAll();
+                if (result.dataset && result.dataset.length > 0) {
+                    result.status = 1;
+                    result.message = messages.success.readAll(result.dataset.length);
+                } else {
+                    result.error = messages.error.readAll(instance.plural);
+                }
+                break;
+            // Ver uno
+            case 'readOne':
+                if (!Administrador.setId(req.body[FIELDS.ID])) {
+                    result.error = messages.error.readOne(instance.singular);
+                } else {
+                    result.dataset = await Administrador.readOne();
+                    if (result.dataset) {
                         result.status = 1;
-                        result.message = `Existen ${result.dataset.length} registros`;
                     } else {
-                        result.error = 'No existen Administradors registrados';
+                        result.error = messages.error.invalid(instance.singular);
                     }
-                    break;
-                // Ver uno
-                case 'readOne':
-                    if (!Administrador.setId(req.body[FIELDS.ID])) {
-                        result.error = 'Administrador incorrecto';
-                    } else {
-                        result.dataset = await Administrador.readOne();
-                        if (result.dataset) {
-                            result.status = 1;
-                        } else {
-                            result.error = 'Administrador inexistente';
-                        }
-                    }
-                    break;
-                default:
-                    result.error = 'Acción no disponible dentro de la sesión';
-            }
-        } else {
-            switch (action) {
-
-                default:
-                    result.error = 'Acción no disponible fuera de la sesión';
-            }
+                }
+                break;
+            default:
+                result.error = messages.error.session;
         }
     } catch (error) {
         result.exception = error.message;
     }
     res.json(result);
 });
-
-module.exports = router;
+// POST: Maneja metodos de creación de datos cuando no haya sesión activa
+secondRouter.post('/', validateBody, validateAction(postActions2), async (req, res) => {
+    const { action } = req.query;
+    try {
+        switch (action) {
+            // Inicio de sesión
+            case 'logIn':
+                req.body = Validator.validateForm(req.body);
+                // Llamamos al método checkUser del handler
+                const user = await Administrador.checkUser(req.body[FIELDS.CORREO], req.body[FIELDS.CLAVE], req);
+                // Si el usuario fue encontrado y la autenticación es exitosa
+                if (user) {
+                    const conditionMessage = messages.conditions[Administrador.getCondicion()];
+                    if (conditionMessage) {
+                        result.error = conditionMessage;
+                    } else if (user.status === 'success') {
+                        result.status = 1;
+                        result.message = messages.success.login;
+                        result.token = user.token;
+                    } else {
+                        result.error = messages.error.login;
+                    }
+                } else {
+                    // Si las credenciales son incorrectas, agregamos un intento
+                    if (Administrador.addAttempt()) {
+                        result.error = messages.error.login;
+                    } else {
+                        result.exception = messages.error.server;
+                    }
+                }
+                // Reiniciamos la condición del administrador
+                Administrador.resetCondition();
+                break;
+            // Registro
+            case 'signUp':
+                // Lógica para signUp
+                break;
+            default:
+                result.error = messages.error.action;
+        }
+    } catch (error) {
+        result.exception = error.message;
+    }
+    res.json(result);
+});
+// PUT: Maneja metodos de edición de datos cuando no haya sesión activa
+secondRouter.put('/', validateBody, validateAction(putActions2), async (req, res) => {
+    const { action } = req.query;
+    try {
+        switch (action) {
+            // Recuperar contraseña
+            case 'recoverPassword':
+                // Lógica para recuperación de contraseña
+                break;
+            default:
+                result.error = messages.error.action;
+        }
+    } catch (error) {
+        result.exception = error.message;
+    }
+    res.json(result);
+});
+module.exports = { router, secondRouter };

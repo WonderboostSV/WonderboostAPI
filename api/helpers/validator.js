@@ -12,27 +12,27 @@ class Validator {
     }
 
     // Método para obtener el error al validar una contraseña.
-    getPasswordError() {
+    static getPasswordError() {
         return this.passwordError;
     }
 
     // Método para obtener el nombre del archivo validado.
-    getFilename() {
+    static getFilename() {
         return this.filename;
     }
 
     // Método para obtener el error al validar un archivo.
-    getFileError() {
+    static getFileError() {
         return this.fileError;
     }
 
     // Método para obtener el valor de búsqueda.
-    getSearchValue() {
+    static getSearchValue() {
         return this.searchValue;
     }
 
     // Método para obtener el error al validar una búsqueda.
-    getSearchError() {
+    static getSearchError() {
         return this.searchError;
     }
 

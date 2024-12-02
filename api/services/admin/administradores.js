@@ -7,6 +7,7 @@ const Validator = require('../../helpers/validator');
 const { verifyJWT } = require('../../helpers/jwt');
 const messages = require('../../helpers/messages');
 const { validateBody, validateAction } = require('../../helpers/petitions');
+const Database = require('../../helpers/database');
 // Constantes de campos
 const FIELDS = {
     ID: "idAdministrador",
@@ -23,7 +24,7 @@ const FIELDS = {
 };
 // Acciones para post
 const postActions = ['createRow', 'searchRows'];
-const postActions2 = ['login', 'signup'];
+const postActions2 = ['logIn', 'signUp'];
 // Acciones para put
 const putActions = ['updateRow', 'changeState'];
 const putActions2 = ['recoverPassword'];
@@ -94,6 +95,7 @@ router.post('/', validateBody, validateAction(postActions), async (req, res) => 
     } catch (error) {
         result.exception = error.message;
     }
+    result.exception = Database.getException();
     res.json(result);
 });
 // PUT: Maneja metodos de edición de datos
@@ -138,6 +140,7 @@ router.put('/', validateBody, validateAction(putActions), async (req, res) => {
     } catch (error) {
         result.exception = error.message;
     }
+    result.exception = Database.getException();
     res.json(result);
 });
 // DELETE: Maneja metodos de eliminación de datos cuando haya sesión activa
@@ -162,6 +165,7 @@ router.delete('/', validateBody, validateAction(deleteActions), async (req, res)
     } catch (error) {
         result.exception = error.message;
     }
+    result.exception = Database.getException();
     res.json(result);
 });
 // GET: Maneja metodos de lectura de datos cuando haya sesión activa
@@ -198,6 +202,7 @@ router.get('/', validateBody, validateAction(getActions), async (req, res) => {
     } catch (error) {
         result.exception = error.message;
     }
+    result.exception = Database.getException();
     res.json(result);
 });
 // POST: Maneja metodos de creación de datos cuando no haya sesión activa
@@ -207,27 +212,31 @@ secondRouter.post('/', validateBody, validateAction(postActions2), async (req, r
         switch (action) {
             // Inicio de sesión
             case 'logIn':
-                req.body = Validator.validateForm(req.body);
-                // Llamamos al método checkUser del handler
-                const user = await Administrador.checkUser(req.body[FIELDS.CORREO], req.body[FIELDS.CLAVE], req);
-                // Si el usuario fue encontrado y la autenticación es exitosa
-                if (user) {
-                    const conditionMessage = messages.conditions[Administrador.getCondicion()];
-                    if (conditionMessage) {
-                        result.error = conditionMessage;
-                    } else if (user.status === 'success') {
-                        result.status = 1;
-                        result.message = messages.success.login;
-                        result.token = user.token;
+                if (!Administrador.setCorreo(req.body[FIELDS.CORREO])) {
+                    result.error = Administrador.getDataError();
+                }
+                else {
+                    // Llamamos al método checkUser del handler
+                    const user = await Administrador.checkUser(req.body[FIELDS.CORREO], req.body[FIELDS.CLAVE]);
+                    // Si el usuario fue encontrado y la autenticación es exitosa
+                    if (user) {
+                        const conditionMessage = messages.conditions[Administrador.getCondicion()];
+                        if (conditionMessage) {
+                            result.error = conditionMessage;
+                        } else if (user.status === 'success') {
+                            result.status = 1;
+                            result.message = messages.success.login;
+                            result.token = user.token;
+                        } else {
+                            result.error = messages.error.login;
+                        }
                     } else {
-                        result.error = messages.error.login;
-                    }
-                } else {
-                    // Si las credenciales son incorrectas, agregamos un intento
-                    if (Administrador.addAttempt()) {
-                        result.error = messages.error.login;
-                    } else {
-                        result.exception = messages.error.server;
+                        // Si las credenciales son incorrectas, agregamos un intento
+                        if (Administrador.addAttempt()) {
+                            result.error = messages.error.login;
+                        } else {
+                            result.exception = messages.error.server;
+                        }
                     }
                 }
                 // Reiniciamos la condición del administrador
@@ -235,6 +244,7 @@ secondRouter.post('/', validateBody, validateAction(postActions2), async (req, r
                 break;
             // Registro
             case 'signUp':
+                result.message = messages.success.test;
                 // Lógica para signUp
                 break;
             default:
@@ -243,6 +253,7 @@ secondRouter.post('/', validateBody, validateAction(postActions2), async (req, r
     } catch (error) {
         result.exception = error.message;
     }
+    result.exception = Database.getException();
     res.json(result);
 });
 // PUT: Maneja metodos de edición de datos cuando no haya sesión activa
@@ -260,6 +271,7 @@ secondRouter.put('/', validateBody, validateAction(putActions2), async (req, res
     } catch (error) {
         result.exception = error.message;
     }
+    result.exception = Database.getException();
     res.json(result);
 });
 module.exports = { router, secondRouter };

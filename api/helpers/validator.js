@@ -38,7 +38,21 @@ class Validator {
 
     // Método para sanear todos los campos de un formulario.
     static validateForm(fields) {
-        return fields.map(field => field.trim());
+        if (Array.isArray(fields)) {
+            // Si es un arreglo, aplicar trim directamente
+            return fields.map(field => field.trim());
+        } else if (typeof fields === 'object' && fields !== null) {
+            // Si es un objeto, sanear sus valores
+            const sanitized = {};
+            for (const key in fields) {
+                if (Object.hasOwn(fields, key)) {
+                    sanitized[key] = typeof fields[key] === 'string' ? fields[key].trim() : fields[key];
+                }
+            }
+            return sanitized;
+        } else {
+            throw new Error('El formato de los campos no es válido.');
+        }
     }
 
     // Método para validar un UUID (versión 4 estándar)

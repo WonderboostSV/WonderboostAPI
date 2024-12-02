@@ -1,13 +1,16 @@
-const Validator = require('validator')
+const Validator = require('./validator')
 // Validar el cuerpo de la petición
 const validateBody = (req, res, next) => {
     try {
+        console.log('Validando cuerpo:', req.body);
         req.body = Validator.validateForm(req.body);
+        console.log('Cuerpo validado:', req.body);
         next();
     } catch (err) {
         res.status(400).json({ status: 0, error: err.message });
     }
 };
+
 
 // Validar cuerpo de acciones
 const validateAction = (validActions) => (req, res, next) => {

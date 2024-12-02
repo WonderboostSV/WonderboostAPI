@@ -8,6 +8,7 @@ const messages = {
         readAll: (count) => `Existen ${count} registros.`,
         state: (instance) => `Estado ${instance} modificado correctamente.`,
         login: `Autenticación exitosa.`,
+        test: `Testeando metodo`,
     },
     // Mensajes de error
     error: {

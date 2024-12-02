@@ -21,7 +21,7 @@ class AdministradoresHandler {
 
     // Metodos para el caso de que no haya una sesión de administrador activa
     // Método para el login
-    async checkUser(username, password, req) {
+    async checkUser(username, password) {
         try {
             const procedureName = 'autenticar_administrador';
             const params = [
@@ -99,6 +99,13 @@ class AdministradoresHandler {
             console.error('Error en checkUser:', error);
             return false;
         }
+    }
+
+    // Método para añadir un intento de inicio de sesión
+    async addAttempt() {
+        const procedureName = `sumar_intento`;
+        const params = [this.alias];
+        return await db.executeProcedure(procedureName, params);
     }
     
     // Función que retorna a su estado original la variable de condición

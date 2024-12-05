@@ -100,6 +100,12 @@ class AdministradoresHandler {
             return false;
         }
     }
+    
+    // Método para contar todos los administradors
+    async countAll() {
+        const sql = `SELECT ALIAS FROM vista_tabla_administradores ORDER BY NOMBRE;`;
+        return await db.getRows(sql);
+    }
 
     // Método para añadir un intento de inicio de sesión
     async addAttempt() {

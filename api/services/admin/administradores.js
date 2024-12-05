@@ -31,7 +31,9 @@ const putActions2 = ['recoverPassword'];
 // Acciones para delete
 const deleteActions = ['deleteRow'];
 // Acciones para get
-const getActions = ['readAll', 'readOne'];
+const getActions = ['readAll', 'readOne', 'getUser'];
+// Acciones para get
+const getActions2 = ['countAll'];
 // Instancias para los mensajes
 const instance = {
     singular: 'Administrador',
@@ -87,6 +89,18 @@ router.post('/', validateBody, validateAction(postActions), async (req, res) => 
                     } else {
                         result.error = messages.error.search;
                     }
+                }
+                break;
+                // Traer datos del usuario
+            case 'getUser':
+                if (req.user) {
+                    result.status = 1;
+                    result.username = req.user.alias;
+                    result.foto = req.user.foto;
+                    result.nombre = req.user.nombreCompleto;
+                    result.correo = req.user.correo;
+                } else {
+                    result.error = messages.error.unauthorized;
                 }
                 break;
             default:
@@ -169,7 +183,7 @@ router.delete('/', validateBody, validateAction(deleteActions), async (req, res)
     res.json(result);
 });
 // GET: Maneja metodos de lectura de datos cuando haya sesión activa
-router.get('/', validateBody, validateAction(getActions), async (req, res) => {
+router.get('/', validateAction(getActions), async (req, res) => {
     const { action } = req.query;
     try {
         switch (action) {
@@ -264,6 +278,30 @@ secondRouter.put('/', validateBody, validateAction(putActions2), async (req, res
             // Recuperar contraseña
             case 'recoverPassword':
                 // Lógica para recuperación de contraseña
+                break;
+            default:
+                result.error = messages.error.action;
+        }
+    } catch (error) {
+        result.exception = error.message;
+    }
+    result.exception = Database.getException();
+    res.json(result);
+});
+// GET: Maneja metodos de lectura de datos cuando haya sesión activa
+secondRouter.get('/', validateAction(getActions2), async (req, res) => {
+    const { action } = req.query;
+    try {
+        switch (action) {
+            // Ver todos
+            case 'countAll':
+                result.dataset = await Administrador.countAll();
+                if (result.dataset && result.dataset.length > 0) {
+                    result.status = 1;
+                    result.message = messages.success.readAll(result.dataset.length);
+                } else {
+                    result.error = messages.error.readAll(instance.plural);
+                }
                 break;
             default:
                 result.error = messages.error.action;

@@ -13,7 +13,7 @@ const generateJWT = (userData) => {
 const verifyJWT = (req, res, next) => {
   const token = req.headers['authorization']; // Leer el token del encabezado
   if (!token) {
-    return res.status(403).json({ message: 'Token no proporcionado' });
+    return res.status(403).json({ status: 0, message: 'Token no proporcionado', dataset: null, error: 'El token no fue proporcionado', exception: null });
   }
 
   try {

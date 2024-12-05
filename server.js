@@ -4,9 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const upload = multer(); // Configuración básica sin almacenamiento de archivos
-
+const cors = require('cors');
 
 const app = express();
+
+app.use(cors());
 
 // Middleware para parsear JSON
 app.use(express.json());
@@ -17,6 +19,19 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Reemplaza con el origen permitido
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+  });  
+
+  // Configura CORS para permitir solicitudes desde localhost:5173
+app.use(cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  }));
 
 // Función para registrar automáticamente rutas desde `services`
 const registerRoutes = (basePath) => {

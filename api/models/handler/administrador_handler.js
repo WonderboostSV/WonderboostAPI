@@ -4,7 +4,18 @@ const bcrypt = require('bcryptjs');
 
 class AdministradoresHandler {
     // Constructor con cada una de las variables que se instanciarian
-    constructor(id = null, nombre = null, correo = null, clave = null, telefono = null, dui = null, nacimiento = null, estado = null, direccion = null, alias = null, condicion = null, dias = null) {
+    constructor(id = null,
+        nombre = null,
+        correo = null,
+        clave = null,
+        telefono = null,
+        dui = null, 
+        nacimiento = null, 
+        estado = null, 
+        direccion = null, 
+        alias = null, 
+        condicion = null, 
+        dias = null) {
         this.id = id;
         this.nombre = nombre;
         this.correo = correo;
@@ -45,14 +56,14 @@ class AdministradoresHandler {
             // Reiniciar bloqueos si ya pasó el tiempo
             if (tiempoBloqueo && tiempoBloqueo <= now) {
                 this.alias = data.ALIAS;
-    
+
                 const transactionResult = await db.executeTransaction(async (transaction) => {
                     await db.executeProcedure('reiniciar_tiempo_bloqueo', [null, this.alias], transaction);
                     await db.executeProcedure('cambiar_estado_bloqueado', [this.alias], transaction);
                     await db.executeProcedure('reiniciar_intentos', [this.alias], transaction);
                     return true; // Confirmar si todo se ejecutó correctamente
                 });
-    
+
                 if (!transactionResult) {
                     this.condicion = 'error_transaccion';
                     return false;
@@ -82,7 +93,7 @@ class AdministradoresHandler {
             const isPasswordValid = bcrypt.compareSync(password, data.CLAVE);
 
             if (!isPasswordValid) return false;
-            
+
             // Generar un JWT con los datos del usuario
             const userData = {
                 id: data.ID,
@@ -92,7 +103,7 @@ class AdministradoresHandler {
                 foto: data.FOTO,
             };
             const token = generateJWT(userData);
-    
+
             // Devuelve el token como parte de la respuesta
             return { status: 'success', token };
         } catch (error) {
@@ -100,7 +111,7 @@ class AdministradoresHandler {
             return false;
         }
     }
-    
+
     // Método para contar todos los administradors
     async countAll() {
         const sql = `SELECT ALIAS FROM vista_tabla_administradores ORDER BY NOMBRE;`;
@@ -113,10 +124,9 @@ class AdministradoresHandler {
         const params = [this.alias];
         return await db.executeProcedure(procedureName, params);
     }
-    
+
     // Función que retorna a su estado original la variable de condición
-    async resetCondition()
-    {
+    async resetCondition() {
         return this.condicion = null;
     }
 

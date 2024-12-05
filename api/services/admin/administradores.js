@@ -243,11 +243,13 @@ secondRouter.post('/', validateBody, validateAction(postActions2), async (req, r
                             result.token = user.token;
                         } else {
                             result.error = messages.error.login;
+                            result.exception = Database.getException();
                         }
                     } else {
                         // Si las credenciales son incorrectas, agregamos un intento
                         if (Administrador.addAttempt()) {
                             result.error = messages.error.login;
+                            result.exception = Database.getException();
                         } else {
                             result.exception = messages.error.server;
                         }

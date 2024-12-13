@@ -7,7 +7,7 @@ Cómo funciona este archivo
 
 -Carga de variables de entorno
 require('dotenv').config();
-•	Función: Carga las variables definidas en un archivo .env para que estén disponibles como process.env.
+•	Función: Carga las variables definidas en un archivo .env para que estén disponibles como properties.
 •	Uso: Permite separar la configuración sensible (como claves o puertos) del código fuente.
 -Configuración de Express
 const express = require('express');
@@ -56,11 +56,11 @@ app.use((err, req, res, next) => {
 •	Función: Middleware para capturar errores no manejados en el servidor.
 •	Comportamiento: Si una operación falla y no se maneja adecuadamente, se responde con un error genérico y código de estado 500.
 -Inicio del servidor
-const PORT = process.env.PORT || 3000;
+const PORT = properties.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
-•	Función: Pone en marcha el servidor Express en el puerto definido en process.env.PORT o en el puerto 3000 por defecto.
+•	Función: Pone en marcha el servidor Express en el puerto definido en properties.PORT o en el puerto 3000 por defecto.
 •	Uso de variables de entorno: Facilita la configuración del puerto para diferentes entornos (desarrollo, producción, pruebas, etc.).
 
 Conceptos clave utilizados

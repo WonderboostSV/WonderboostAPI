@@ -1,4 +1,5 @@
-require('dotenv').config();
+// Cargar variables de entorno desde un archivo .env
+const properties = require('./api/helpers/properties');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -20,7 +21,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Reemplaza con el origen permitido
+    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
@@ -73,7 +74,7 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar el servidor
-const PORT = process.env.PORT || 3000;
+const PORT = properties.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

@@ -1,4 +1,5 @@
-require('dotenv').config();
+// Cargar variables de entorno desde un archivo .env
+const properties = require('./properties');
 const { Sequelize, QueryTypes } = require('sequelize');
 const { config } = require('./config');
 
@@ -6,8 +7,8 @@ class Database {
     // Conexión a la base de datos utilizando Sequelize
     static sequelize = new Sequelize(config.database, config.username, config.password, {
         host: config.server,
-        dialect: 'mysql',
-        timezone: process.env.TZ,
+        dialect: config.dialect,
+        timezone: properties.TZ,
         logging: false, // Desactiva el logging de Sequelize, si es necesario
     });
     static error = null;

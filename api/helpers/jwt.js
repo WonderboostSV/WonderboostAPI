@@ -1,7 +1,8 @@
-require('dotenv').config();
+// Cargar variables de entorno desde un archivo .env
+const properties = require('./properties');
 const jwt = require('jsonwebtoken');
 
-const secretKey = process.env.CLAVE_JWT;
+const secretKey = properties.CLAVE_JWT;
 
 // Función para generar un JWT
 const generateJWT = (userData) => {

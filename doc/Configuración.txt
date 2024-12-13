@@ -34,11 +34,11 @@ solucione el problema rápidamente.
 
 -Definición de la configuración de base de datos
 const config = {
-    server: process.env.DB_SERVER,
-    database: process.env.DB_DATABASE,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    dialect: process.env.DB_DIALECT
+    server: properties.DB_SERVER,
+    database: properties.DB_DATABASE,
+    username: properties.DB_USERNAME,
+    password: properties.DB_PASSWORD,
+    dialect: properties.DB_DIALECT
 };
 
 •	Función: Aquí defino un objeto config que contiene los parámetros necesarios para conectar la aplicación a la base de datos.

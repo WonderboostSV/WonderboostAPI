@@ -1,5 +1,5 @@
-require('dotenv').config(); // Cargar variables de entorno
-
+// Cargar variables de entorno desde un archivo .env
+const properties = require('./properties');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const handlebars = require('handlebars');
@@ -7,12 +7,12 @@ const handlebars = require('handlebars');
 class Email {
     constructor() {
         this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST, // Servidor SMTP
-            port: parseInt(process.env.EMAIL_PORT, 10), // Puerto SMTP
-            secure: process.env.EMAIL_PORT === '465', // Usar SSL si el puerto es 465
+            host: properties.EMAIL_HOST, // Servidor SMTP
+            port: parseInt(properties.EMAIL_PORT, 10), // Puerto SMTP
+            secure: properties.EMAIL_PORT === '465', // Usar SSL si el puerto es 465
             auth: {
-                user: process.env.EMAIL_USER, // Usuario
-                pass: process.env.EMAIL_PASS, // Contraseña
+                user: properties.EMAIL_USER, // Usuario
+                pass: properties.EMAIL_PASS, // Contraseña
             },
         });
     }
@@ -30,7 +30,7 @@ class Email {
             const htmlContent = this.loadTemplate(templatePath, variables);
 
             const mailOptions = {
-                from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_ADDRESS}>`, // Quien envía
+                from: `"${properties.EMAIL_FROM_NAME}" <${properties.EMAIL_FROM_ADDRESS}>`, // Quien envía
                 to, // Destinatario
                 subject, // Asunto
                 html: htmlContent, // Cuerpo del correo en HTML

@@ -1,5 +1,5 @@
-// Cargar el paquete 'dotenv' para cargar variables de entorno desde un archivo .env
-require('dotenv').config();
+// Cargar variables de entorno desde un archivo .env
+const properties = require('./properties');
 const path = require('path');
 
 // Verifica si el archivo .env existe
@@ -12,11 +12,11 @@ if (!fs.existsSync(envPath)) {
 
 // Definir las variables de conexión a la base de datos usando las variables de entorno cargadas
 const config = {
-    server: process.env.DB_SERVER,
-    database: process.env.DB_DATABASE,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    dialect: process.env.DB_DIALECT
+    server: properties.DB_SERVER,
+    database: properties.DB_DATABASE,
+    username: properties.DB_USERNAME,
+    password: properties.DB_PASSWORD,
+    dialect: properties.DB_DIALECT
 };
 
 // Encabezado para permitir solicitudes de cualquier origen (si se implementa un servidor HTTP más adelante)

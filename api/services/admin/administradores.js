@@ -10,26 +10,34 @@ const { validateBody, validateAction } = require('../../helpers/petitions');
 const Database = require('../../helpers/database');
 // Constantes de campos
 const FIELDS = {
+    // Tabla: administradores
     ID: "idAdministrador",
-    NOMBRE: "nombreAdministrador",
     CORREO: "correoAdministrador",
     CLAVE: "claveAdministrador",
+    ALIAS: "aliasAdministrador",
+    ROL: 'rolAdministrador',
+    ESTADO: "estadoAdministrador",
+    // Tabla: datos_administradores
+    IDD: "idDatoAdministrador",
+    NOMBRE: "nombreAdministrador",
+    APELLIDO: "apellidoAdministrador",
     TELEFONO: "telefonoAdministrador",
     DUI: "duiAdministrador",
     NACIMIENTO: "nacimientoAdministrador",
-    ESTADO: "estadoAdministrador",
     DIRECCION: "direccionAdministrador",
+    FOTO: "fotoAdministrador",
+    // Extras
     CLAVE_CONFIRMAR: "confirmarClave",
     BUSCAR: "search"
 };
 // Acciones para post
-const postActions = ['createRow', 'searchRows'];
+const postActions = ['createRow', 'createRowD', 'searchRows'];
 const postActions2 = ['logIn', 'signUp'];
 // Acciones para put
-const putActions = ['updateRow', 'changeState'];
+const putActions = ['updateRow', 'updateRowD', 'changeState'];
 const putActions2 = ['recoverPassword'];
 // Acciones para delete
-const deleteActions = ['deleteRow'];
+const deleteActions = ['deleteRow', 'deleteRowD'];
 // Acciones para get
 const getActions = ['readAll', 'readOne', 'getUser'];
 // Acciones para get
@@ -42,7 +50,7 @@ const instance = {
     error: 'el administrador'
 };
 // Crear result, con los datos que devolvera el json
-const createResult = () => ({ status: 0, message: null, dataset: null, error: null, exception: null });
+const createResult = () => ({ status: 0, message: null, dataset: null, error: null, exception: null, fileStatus: null });
 // Crear la instancia de la clase AdministradoresData
 const instanceAdministradorData = () => (new AdministradoresData());
 // Asignarle al result el arreglo
@@ -59,13 +67,10 @@ router.post('/', validateBody, validateAction(postActions), async (req, res) => 
             // Crear fila
             case 'createRow':
                 if (
-                    !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
                     !Administrador.setCorreo(req.body[FIELDS.CORREO]) ||
-                    !Administrador.setClave(req.body[FIELDS.CLAVE], req.body[FIELDS.NOMBRE], req.body[FIELDS.NACIMIENTO], req.body[FIELDS.TELEFONO], req.body[FIELDS.CORREO]) ||
-                    !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
-                    !Administrador.setDUI(req.body[FIELDS.DUI]) ||
-                    !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
-                    !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO])
+                    !Administrador.setClave(req.body[FIELDS.CLAVE], req.body[FIELDS.ALIAS], req.body[FIELDS.CORREO]) ||
+                    !Administrador.setAlias(req.body[FIELDS.ALIAS]) ||
+                    !Administrador.setRol(req.body[FIELDS.ROL])
                 ) {
                     result.error = Administrador.getDataError();
                 } else if (req.body[FIELDS.CLAVE] !== req.body[FIELDS.CLAVE_CONFIRMAR]) {
@@ -73,6 +78,30 @@ router.post('/', validateBody, validateAction(postActions), async (req, res) => 
                 } else if (await Administrador.createRow()) {
                     result.status = 1;
                     result.message = messages.success.create(instance.singular);
+                } else {
+                    result.error = messages.error.create(instance.error);
+                }
+                break;
+            // Crear fila
+            case 'createRowD':
+                if (
+                    !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
+                    !Administrador.setApellido(req.body[FIELDS.APELLIDO]) ||
+                    !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
+                    !Administrador.setDUI(req.body[FIELDS.DUI]) ||
+                    !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
+                    !Administrador.setId(req.body[FIELDS.ID]) ||
+                    !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO] ||
+                    !Administrador.setFoto(req.body[FIELDS.FOTO]))
+                ) {
+                    result.error = Administrador.getDataError();
+                } else if (req.body[FIELDS.CLAVE] !== req.body[FIELDS.CLAVE_CONFIRMAR]) {
+                    result.error = messages.error.pass;
+                } else if (await Administrador.createRowD()) {
+                    result.status = 1;
+                    result.message = messages.success.create(instance.singular);
+                    // Se asigna el estado del archivo después de insertar.
+                    result.fileStatus = Validator.saveFile(req.body[FIELDS.FOTO], Administrador.RUTA_IMAGEN);
                 } else {
                     result.error = messages.error.create(instance.error);
                 }
@@ -91,7 +120,7 @@ router.post('/', validateBody, validateAction(postActions), async (req, res) => 
                     }
                 }
                 break;
-                // Traer datos del usuario
+            // Traer datos del usuario
             case 'getUser':
                 if (req.user) {
                     result.status = 1;
@@ -121,18 +150,38 @@ router.put('/', validateBody, validateAction(putActions), async (req, res) => {
             case 'updateRow':
                 if (
                     !Administrador.setId(req.body[FIELDS.ID]) ||
-                    !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
                     !Administrador.setCorreo(req.body[FIELDS.CORREO]) ||
-                    !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
-                    !Administrador.setDUI(req.body[FIELDS.DUI]) ||
-                    !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
-                    !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO]) ||
-                    !Administrador.setEstado(req.body[FIELDS.ESTADO] ? 1 : 0)
+                    !Administrador.setClave(req.body[FIELDS.CLAVE], req.body[FIELDS.ALIAS], req.body[FIELDS.CORREO]) ||
+                    !Administrador.setAlias(req.body[FIELDS.ALIAS]) ||
+                    !Administrador.setRol(req.body[FIELDS.ROL])
                 ) {
                     result.error = Administrador.getDataError();
                 } else if (await Administrador.updateRow()) {
                     result.status = 1;
                     result.message = messages.success.update(instance.singular);
+                } else {
+                    result.error = messages.error.update(instance.error);
+                }
+                break;
+            // Actualizar un campo
+            case 'updateRowD':
+                if (
+                    !Administrador.setIdD(req.body[FIELDS.IDD]) ||
+                    !Administrador.setFilename() ||
+                    !Administrador.setNombre(req.body[FIELDS.NOMBRE]) ||
+                    !Administrador.setApellido(req.body[FIELDS.APELLIDO]) ||
+                    !Administrador.setTelefono(req.body[FIELDS.TELEFONO]) ||
+                    !Administrador.setDUI(req.body[FIELDS.DUI]) ||
+                    !Administrador.setDireccion(req.body[FIELDS.DIRECCION]) ||
+                    !Administrador.setNacimiento(req.body[FIELDS.NACIMIENTO] ||
+                    !Administrador.setFoto(req.body[FIELDS.FOTO], Administrador.getFilename()))
+                ) {
+                    result.error = Administrador.getDataError();
+                } else if (await Administrador.updateRow()) {
+                    result.status = 1;
+                    result.message = messages.success.update(instance.singular);
+                    // Se asigna el estado del archivo después de actualizar.
+                    result.fileStatus = Validator.changeFile(req.body[FIELDS.FOTO], Administrador.RUTA_IMAGEN, Administrador.getFilename());
                 } else {
                     result.error = messages.error.update(instance.error);
                 }
@@ -167,6 +216,17 @@ router.delete('/', validateBody, validateAction(deleteActions), async (req, res)
                 if (!Administrador.setId(req.body[FIELDS.ID])) {
                     result.error = Administrador.getDataError();
                 } else if (await Administrador.deleteRow()) {
+                    result.status = 1;
+                    result.message = messages.success.delete(instance.singular);
+                } else {
+                    result.error = messages.error.delete(instance.error);
+                }
+                break;
+            // Eliminar
+            case 'deleteRowD':
+                if (!Administrador.setIdD(req.body[FIELDS.IDD])) {
+                    result.error = Administrador.getDataError();
+                } else if (await Administrador.deleteRowD()) {
                     result.status = 1;
                     result.message = messages.success.delete(instance.singular);
                 } else {

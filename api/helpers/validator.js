@@ -73,36 +73,54 @@ class Validator {
 
     // Método para validar y convertir un archivo de imagen
     static async validateAndConvertImage(file, dimension) {
-        const validTypes = ['image/jpeg', 'image/png'];
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
         if (file && file.mimetype && validTypes.includes(file.mimetype)) {
             if (file.size > 2097152) {
                 this.fileError = 'El tamaño de la imagen debe ser menor a 2MB';
                 return false;
             }
-
-            const extension = 'webp'; // Puedes usar 'avif' para AVIF
-            const filename = `${Date.now()}.${extension}`;
-            const outputPath = path.join(__dirname, 'uploads', filename);
-
+    
             try {
-                await sharp(file.buffer) // Buffer del archivo recibido
+                const image = sharp(file.buffer);
+                const metadata = await image.metadata();
+    
+                // Verificar si ya está comprimida con las dimensiones y formato deseados
+                if (
+                    metadata.width === dimension.width &&
+                    metadata.height === dimension.height &&
+                    metadata.format === 'webp' // Cambia a 'avif' si deseas validar AVIF
+                ) {
+                    this.filename = `${Date.now()}.webp`;
+                    const outputPath = path.join(__dirname, 'uploads', this.filename);
+    
+                    // Guardar directamente el archivo si cumple las condiciones
+                    await fs.promises.writeFile(outputPath, file.buffer);
+                    return true;
+                }
+    
+                const filename = `${Date.now()}.webp`; // Usa 'avif' si deseas AVIF
+                const outputPath = path.join(__dirname, 'uploads', filename);
+    
+                // Comprimir y redimensionar la imagen si no está optimizada
+                await image
                     .resize(dimension.width, dimension.height, {
                         fit: sharp.fit.cover,
                     })
-                    .toFormat(extension, { quality: 80 }) // WebP o AVIF con calidad ajustada
+                    .toFormat('webp', { quality: 80 }) // Cambiar a 'avif' si se requiere
                     .toFile(outputPath);
-
+    
                 this.filename = filename;
                 return true;
             } catch (error) {
+                console.error('Error al procesar la imagen:', error);
                 this.fileError = 'Error al procesar la imagen';
                 return false;
             }
         } else {
-            this.fileError = 'El tipo de imagen debe ser jpg o png';
+            this.fileError = 'El tipo de imagen debe ser jpg, avif, webp o png';
             return false;
         }
-    }
+    }    
 
     /*
      *   Método para validar un archivo al momento de subirlo al servidor.
@@ -268,7 +286,7 @@ class Validator {
     }
 
     // Método para validar una contraseña.
-    static validatePassword(value, name, lastname, birthday, phone, email) {
+    static validatePassword(value, alias, email) {
         if (value.length < 8) {
             this.passwordError = 'Clave menor a 8 caracteres';
             return false;
@@ -293,10 +311,7 @@ class Validator {
         }
 
         const sensitiveData = {
-            'nombre': name,
-            'apellido': lastname,
-            'fecha de nacimiento': birthday,
-            'teléfono': phone,
+            'alias': alias,
             'email': email
         };
 

@@ -4,31 +4,52 @@ const bcrypt = require('bcryptjs');
 
 class AdministradoresHandler {
     // Constructor con cada una de las variables que se instanciarian
-    constructor(id = null,
-        nombre = null,
+    constructor
+    (
+        // Tabla: administradores
+        id = null,
         correo = null,
         clave = null,
+        alias = null, 
+        rol = null,
+        estado = null, 
+        dias = null,
+        // Tabla: datos_administradores
+        idd = null,
+        nombre = null,
+        apellido = null,
         telefono = null,
         dui = null, 
         nacimiento = null, 
-        estado = null, 
-        direccion = null, 
-        alias = null, 
-        condicion = null, 
-        dias = null) {
+        direccion = null,
+        foto = null, 
+        // Extras
+        condicion = null
+    ) 
+    {
+        // Tabla: administradores
         this.id = id;
-        this.nombre = nombre;
         this.correo = correo;
         this.clave = clave;
+        this.alias = alias;
+        this.rol = rol;
+        this.estado = estado;
+        this.dias = dias;
+        // Tabla: datos_administradores
+        this.idd = idd;
+        this.nombre = nombre;
+        this.apellido = apellido;
         this.telefono = telefono;
         this.dui = dui;
         this.nacimiento = nacimiento;
-        this.estado = estado;
         this.direccion = direccion;
-        this.alias = alias;
+        this.foto = foto;
+        // Extras
         this.condicion = condicion;
-        this.dias = dias;
     }
+
+    // Constante para establecer la ruta de las imágenes.
+    RUTA_IMAGEN = '../../images/administradores/';
 
     // Metodos para el caso de que no haya una sesión de administrador activa
     // Método para el login
@@ -145,13 +166,26 @@ class AdministradoresHandler {
     async createRow() {
         const procedureName = 'insertar_administrador';
         const params = [
-            this.nombre,
             this.correo,
             this.clave,
+            this.alias,
+            this.rol
+        ];
+        return await db.executeProcedure(procedureName, params);
+    }
+    
+    // Método para insertar datos a un administrador
+    async createRowD() {
+        const procedureName = 'insertar_dato_administrador';
+        const params = [
+            this.nombre,
+            this.apellido,
             this.telefono,
             this.dui,
             this.direccion,
-            this.nacimiento
+            this.id,
+            this.nacimiento,
+            this.foto
         ];
         return await db.executeProcedure(procedureName, params);
     }
@@ -169,18 +203,40 @@ class AdministradoresHandler {
         return await db.getRow(sql, params);
     }
 
+    // Método para leer un administrador por ID
+    async readFilename() {
+        const sql = `SELECT FOTO
+        FROM vista_tabla_administradores
+        WHERE ID_DATO = ?`;
+        const params = [this.idd];
+        return await db.getRow(sql, params);
+    }
+
     // Método para actualizar un administrador
     async updateRow() {
         const procedureName = `actualizar_administrador`;
         const params = [
             this.id,
-            this.nombre,
             this.correo,
+            this.clave,
+            this.alias,
+            this.rol
+        ];
+        return await db.executeProcedure(procedureName, params);
+    }
+
+    // Método para actualizar los datos de un administrador
+    async updateRowD() {
+        const procedureName = `actualizar_dato_administrador`;
+        const params = [
+            this.idd,
+            this.nombre,
+            this.apellido,
             this.telefono,
             this.dui,
             this.direccion,
             this.nacimiento,
-            this.estado
+            this.foto
         ];
         return await db.executeProcedure(procedureName, params);
     }
@@ -189,6 +245,13 @@ class AdministradoresHandler {
     async deleteRow() {
         const procedureName = `eliminar_administrador`;
         const params = [this.id];
+        return await db.executeProcedure(procedureName, params);
+    }
+
+    // Método para eliminar un administrador
+    async deleteRowD() {
+        const procedureName = `eliminar_dato_administrador`;
+        const params = [this.idd];
         return await db.executeProcedure(procedureName, params);
     }
 

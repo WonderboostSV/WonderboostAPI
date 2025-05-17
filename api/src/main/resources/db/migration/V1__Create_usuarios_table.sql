@@ -5,7 +5,6 @@ CREATE TABLE usuarios (
 	CONSTRAINT uq_correo_usuario_unico UNIQUE (correo_usuario),
 	clave_usuario VARCHAR(255) NOT NULL,
 	pin_usuario CHAR(4) NULL,
-	fecha_creacion DATE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	id_tipo_usuario CHAR(36),
 	CONSTRAINT fk_tipo_del_usuario FOREIGN KEY (id_tipo_usuario) REFERENCES tipos_usuarios (id_tipo_usuario),
 	estado_usuario BOOLEAN DEFAULT 1,

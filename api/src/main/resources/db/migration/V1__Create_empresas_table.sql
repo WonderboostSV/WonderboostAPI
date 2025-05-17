@@ -5,7 +5,6 @@ CREATE TABLE empresas (
 	CONSTRAINT fk_tipo_de_la_empresa FOREIGN KEY (id_tipo_empresa) REFERENCES tipos_empresas (id_tipo_empresa),
 	logo_empresa VARCHAR(255) NULL,
 	descripcion_empresa TEXT NULL,
-	fecha_registro DATE DEFAULT CURRENT_TIMESTAMP,
 	numero_registro_fiscal VARCHAR(20) NULL UNIQUE,
 	estado_empresa BOOLEAN DEFAULT 1,
 	pagina_web_empresa VARCHAR(255) NULL,

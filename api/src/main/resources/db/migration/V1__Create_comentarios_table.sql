@@ -4,7 +4,6 @@ CREATE TABLE comentarios (
 	id_producto CHAR(36),
 	id_servicio CHAR(36),
 	comentario TEXT NOT NULL,
-	fecha_comentario DATETIME DEFAULT CURRENT_TIMESTAMP,
 	estado_comentario BOOLEAN DEFAULT 1,
 	CONSTRAINT fk_comentario_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario),
 	CONSTRAINT fk_comentario_producto FOREIGN KEY (id_producto) REFERENCES productos (id_producto),

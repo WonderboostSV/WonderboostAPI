@@ -7,7 +7,6 @@ CREATE TABLE seguimientos_pagos (
 		'Fallido',
 		'Reembolsado'
 	) NOT NULL,
-	fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
 	observaciones TEXT NULL,
 	CONSTRAINT fk_seguimiento_pago FOREIGN KEY (id_pago) REFERENCES pagos (id_pago),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP(),

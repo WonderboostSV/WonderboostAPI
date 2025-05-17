@@ -2,7 +2,6 @@ CREATE TABLE solicitudes_permisos_venta (
 	id_solicitud CHAR(36) NOT NULL PRIMARY KEY,
 	id_usuario CHAR(36) NOT NULL,
 	id_empresa CHAR(36) NOT NULL,
-	fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP,
 	estado_solicitud ENUM ('Pendiente', 'Aprobado', 'Rechazado') DEFAULT 'Pendiente',
 	observaciones TEXT NULL,
 	CONSTRAINT fk_solicitud_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario),

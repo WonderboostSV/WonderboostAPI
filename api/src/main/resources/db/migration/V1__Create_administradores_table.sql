@@ -11,7 +11,6 @@ CREATE TABLE administradores (
 	correo_administrador VARCHAR(100) NOT NULL,
 	CONSTRAINT uq_correo_administrador_unico UNIQUE (correo_administrador),
 	clave_administrador VARCHAR(255) NOT NULL,
-	fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP(),
 	alias_administrador VARCHAR(25) NOT NULL,
 	id_rol_administrador CHAR(36) NOT NULL,
 	CONSTRAINT fk_id_rol_administrador FOREIGN KEY (id_rol_administrador) REFERENCES roles_administradores (id_rol_administrador),

@@ -1,13 +1,27 @@
-# Build stage
+# Etapa de construcción
 FROM maven:3.9.6-eclipse-temurin-21 AS build
-WORKDIR /app
+WORKDIR /workspace/app
+
+# Copiar solo los archivos necesarios para construir
 COPY pom.xml .
 COPY src ./src
+
+# Construir la aplicación
 RUN mvn clean package -DskipTests
 
-# Runtime stage
-FROM eclipse-temurin:21-jre
+# Etapa de ejecución
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
+# Copiar el artefacto construido
+COPY --from=build /workspace/app/target/api-*.jar app.jar
+
+# Copiar archivos necesarios
+COPY .env ./
+COPY src/main/resources/application.properties ./config/
+
+# Puerto expuesto
 EXPOSE 8080
+
+# Comando de arranque
 ENTRYPOINT ["java", "-jar", "app.jar"]

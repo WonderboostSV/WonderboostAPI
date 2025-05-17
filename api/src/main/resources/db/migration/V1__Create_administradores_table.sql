@@ -1,0 +1,26 @@
+CREATE TABLE administradores (
+	id_administrador CHAR(36) NOT NULL PRIMARY KEY,
+	nombre_administrador VARCHAR(50) NOT NULL,
+	apellido_administrador VARCHAR(50) NOT NULL,
+	telefono_administrador VARCHAR(15) NOT NULL,
+	dui_administrador VARCHAR(10) NOT NULL,
+    CONSTRAINT uq_dui_administrador_unico UNIQUE (dui_administrador),
+	direccion_administrador VARCHAR(200) NOT NULL,
+	fecha_nacimiento_administrador DATE NULL,
+	foto_administrador VARCHAR(50) NULL
+	correo_administrador VARCHAR(100) NOT NULL,
+	CONSTRAINT uq_correo_administrador_unico UNIQUE (correo_administrador),
+	clave_administrador VARCHAR(255) NOT NULL,
+	fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP(),
+	alias_administrador VARCHAR(25) NOT NULL,
+	id_rol_administrador CHAR(36) NOT NULL,
+	CONSTRAINT fk_id_rol_administrador FOREIGN KEY (id_rol_administrador) REFERENCES roles_administradores (id_rol_administrador),
+	intentos_administrador INT DEFAULT 0,
+	estado_administrador BOOLEAN DEFAULT 1,
+	tiempo_intento DATETIME NULL,
+	fecha_clave DATETIME NULL DEFAULT CURRENT_TIMESTAMP(),
+	fecha_bloqueo DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP(),
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+    deleted_at DATETIME NULL
+);

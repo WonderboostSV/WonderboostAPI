@@ -1,40 +1,44 @@
 version: '3.8'
 
 services:
-  db:
+  wonderboost-db:
     image: mariadb:11.3
-    container_name: wonderboost_db
+    container_name: wonderboost-db
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: Wonderboost
-      MYSQL_USER: wonderuser
-      MYSQL_PASSWORD: wonderpass
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${DB_NAME:-Wonderboost}
+      MYSQL_USER: ${DB_USER:-wonderuser}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-wonderpass}
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 10s
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
       retries: 5
 
-  app:
+  wonderboost-app:
     build: .
-    container_name: wonderboost_app
+    container_name: wonderboost-app
     depends_on:
-      db:
+      wonderboost-db:
         condition: service_healthy
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/Wonderboost
-      SPRING_DATASOURCE_USERNAME: wonderuser
-      SPRING_DATASOURCE_PASSWORD: wonderpass
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:mariadb://wonderboost-db:3306/${DB_NAME:-Wonderboost}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-wonderuser}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-wonderpass}
       SPRING_FLYWAY_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
     volumes:
-      - .env:/app/.env
+      - ./.env:/app/.env
+      - ./src/main/resources:/app/config:ro
+    restart: unless-stopped
 
 volumes:
   db_data:
